@@ -1,0 +1,22 @@
+[project]
+name = "jv"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Colin Pannikkat",email = "pannikkc@oregonstate.edu"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.11, <=3.14"
+dependencies = [
+    "opencv-python (>=4.12.0.88,<5.0.0.0)",
+    "torch (>=2.9.0,<3.0.0)",
+    "pillow (>=12.0.0,<13.0.0)",
+    "pytest (>=8.4.2,<9.0.0)",
+    "transformers (>=4.57.1,<5.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
