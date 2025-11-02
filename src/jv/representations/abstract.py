@@ -37,7 +37,7 @@ class AbstractModelClass(ABC):
                 raise InvalidTorchDeviceException(device)
 
     @abstractmethod
-    def run(self, inputs, device: str) -> ObjectRepData:
+    def run(self, input, device: str) -> ObjectRepData:
         pass
 
     @abstractmethod
