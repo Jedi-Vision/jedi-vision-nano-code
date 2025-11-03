@@ -44,10 +44,10 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
 
         return model
 
-    def run(self, input: Image, device: str) -> ObjectRepData:
-        batch_feature = self.preprocess(input, device=device)
-        output = self.forward(batch_feature, device=device)
-        return self.postprocess(output, device=device, input=input)
+    def run(self, input: Image) -> ObjectRepData:
+        batch_feature = self.preprocess(input)
+        output = self.forward(batch_feature)
+        return self.postprocess(output, input=input)
 
     def preprocess(self, input: Image, **kwargs) -> BatchFeature:
         inputs = self.processor(images=input, return_tensors="pt")
@@ -57,8 +57,13 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
     def forward(self, input, **kwargs) -> SemanticSegmenterOutput:
         return self.model(**input)
 
-    def postprocess(self, out: SemanticSegmenterOutput, **kwargs) -> ObjectRepData:
+    def postprocess(
+        self,
+        out: SemanticSegmenterOutput,
+        **kwargs
+    ) -> ObjectRepData:
         logits = out.logits
+
         input: Image | None = kwargs.get("input", None)
 
         if input is None or logits is None:
