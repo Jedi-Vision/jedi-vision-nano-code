@@ -8,7 +8,6 @@ Description: This file contains the implementation of the SegFormerEnvironmentRe
 
 from .abstract import AbstractModelClass
 import torch
-from PIL.Image import Image
 from .data import ObjectRepData
 from transformers import (
     BatchFeature,
@@ -44,17 +43,17 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
 
         return model
 
-    def run(self, input: Image) -> ObjectRepData:
+    def run(self, input: torch.Tensor) -> ObjectRepData:
         batch_feature = self.preprocess(input)
-        output = self.forward(batch_feature)
+        output = self.process(batch_feature)
         return self.postprocess(output, input=input)
 
-    def preprocess(self, input: Image, **kwargs) -> BatchFeature:
+    def preprocess(self, input: torch.Tensor, **kwargs) -> BatchFeature:
         inputs = self.processor(images=input, return_tensors="pt")
         inputs.to(self.device)
         return inputs
 
-    def forward(self, input, **kwargs) -> SemanticSegmenterOutput:
+    def process(self, input: BatchFeature, **kwargs) -> SemanticSegmenterOutput:
         return self.model(**input)
 
     def postprocess(
@@ -64,12 +63,12 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
     ) -> ObjectRepData:
         logits = out.logits
 
-        input: Image | None = kwargs.get("input", None)
+        input: torch.Tensor | None = kwargs.get("input", None)
 
         if input is None or logits is None:
             raise Exception("Fatal error on model run.")
 
-        original_size = (input.size[1], input.size[0])
+        original_size = (input.shape[1], input.shape[0])
 
         seg_map = torch.softmax(logits.squeeze(0), dim=0).detach().cpu().numpy()
         epsilon = 0.5

@@ -45,7 +45,7 @@ class AbstractModelClass(ABC):
         pass
 
     @abstractmethod
-    def forward(self, input) -> ...:
+    def process(self, input) -> ...:
         pass
 
     @abstractmethod
