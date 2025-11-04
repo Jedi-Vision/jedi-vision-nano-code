@@ -6,11 +6,16 @@ from argparse import ArgumentParser
 import os
 
 parser = ArgumentParser()
-parser.add_argument("--device", choices=['cpu', 'mps', 'cuda'], default="mps")
-parser.add_argument("--video", default="./videos/sidewalk_pov.mp4")
-parser.add_argument("--webcam", action="store_true", default=False, help="Use webcam instead of input video.")
-parser.add_argument("--phone", action="store_true", default=False, help="Use phone instead of input video.")
-parser.add_argument("--text", action="store_true", default=False, help="Add text labels for classes on seg-masks.")
+parser.add_argument("-d", "--device",
+                    choices=['cpu', 'mps', 'cuda'], default="mps")
+parser.add_argument("-v", "--video",
+                    default="./videos/sidewalk_pov.mp4")
+parser.add_argument("-w", "--webcam",
+                    action="store_true", default=False, help="Use webcam instead of input video.")
+parser.add_argument("-p", "--phone",
+                    action="store_true", default=False, help="Use phone instead of input video.")
+parser.add_argument("-t", "--text",
+                    action="store_true", default=False, help="Add text labels for classes on seg-masks.")
 args = parser.parse_args()
 
 if args.video == "./videos/sidewalk_pov.mp4" and not (os.path.exists(args.video) or args.webcam or args.phone):
