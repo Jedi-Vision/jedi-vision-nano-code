@@ -1,9 +1,9 @@
 """
-Program: ADE Palette Generator
+Program: ADE20k Palette Generator
 File: ade_palette.py
 Author: Colin Pannikkat
-Description: This script defines a function `ade_palette` that generates a label colormap 
-             used in the ADE20K segmentation benchmark. The colormap is represented as a 
+Description: This script defines a function `ade_palette` that generates a label colormap
+             used in the ADE20K segmentation benchmark. The colormap is represented as a
              NumPy array of RGB values, where each row corresponds to a unique color.
 """
 
