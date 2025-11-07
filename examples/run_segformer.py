@@ -25,7 +25,7 @@ if args.video == "./videos/sidewalk_pov.mp4" and not (os.path.exists(args.video)
     )
     exit(1)
 
-model = SegFormerEnvironmentRepresentationModelClass("ade-small", k=1, device=args.device)
+model = SegFormerEnvironmentRepresentationModelClass("ade-b0", k=1, device=args.device)
 
 if args.webcam:
     cap = cv2.VideoCapture(0)  # run with webcam
