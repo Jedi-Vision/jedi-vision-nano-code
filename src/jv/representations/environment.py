@@ -8,7 +8,8 @@ Description: This file contains the implementation of the SegFormerEnvironmentRe
 
 from .abstract import AbstractModelClass
 import torch
-from .data import ObjectRepData
+import torch.nn.functional as F
+from .data import ObjectRepData, ObjectXYCoordData
 from transformers import (
     BatchFeature,
     SegformerImageProcessorFast,
@@ -19,15 +20,49 @@ import cv2
 import numpy as np
 from .ade_palette import ade_palette
 from .ade_id import ADE_ID_TO_LABEL
+from functools import reduce
 
 
 SEG_MODEL_ZOO = {
-    "ade-small": "nvidia/segformer-b0-finetuned-ade-512-512",
+    "ade-b0": "nvidia/segformer-b0-finetuned-ade-512-512",
+    "ade-b1": "nvidia/segformer-b1-finetuned-ade-512-512",
+    "ade-b2": "nvidia/segformer-b2-finetuned-ade-512-512",
+    "ade-b3": "nvidia/segformer-b3-finetuned-ade-512-512",
+    "ade-b4": "nvidia/segformer-b4-finetuned-ade-512-512"
 }
 
 CLASS_TO_CONF = {
 
 }
+
+
+def mode_pool2d(mask, kernel_size, stride):
+    """
+    Performs mode pooling on a 2D class label mask.
+    For each window, the most frequent label is selected.
+
+    Args:
+        mask (torch.Tensor): [H, W] tensor with integer class labels
+        kernel_size (int): pooling window size
+        stride (int): stride of pooling window
+
+    Returns:
+        torch.Tensor: pooled mask of shape [H_out, W_out]
+    """
+    # Add batch and channel dimensions
+    mask = mask.unsqueeze(0).unsqueeze(0)  # [1, 1, H, W]
+
+    # Use unfold to extract sliding windows
+    patches = F.unfold(mask.float(), kernel_size=kernel_size, stride=stride)  # [1, K*K, L]
+    patches = patches.long()  # convert back to int for mode computation
+
+    # Compute mode along each column (i.e. per patch)
+    mode_vals, _ = torch.mode(patches, dim=1)  # [1, L]
+
+    # Reshape to 2D
+    H_out = (mask.shape[2] - kernel_size) // stride + 1
+    W_out = (mask.shape[3] - kernel_size) // stride + 1
+    return mode_vals.view(H_out, W_out)
 
 
 class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
@@ -43,10 +78,10 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
 
         return model
 
-    def run(self, input: torch.Tensor) -> ObjectRepData:
-        batch_feature = self.preprocess(input)
-        output = self.process(batch_feature)
-        return self.postprocess(output, input=input)
+    def run(self, input: torch.Tensor, **kwargs) -> ObjectRepData:
+        batch_feature = self.preprocess(input, **kwargs)
+        output = self.process(batch_feature, **kwargs)
+        return self.postprocess(output, input=input, **kwargs)
 
     def preprocess(self, input: torch.Tensor, **kwargs) -> BatchFeature:
         inputs = self.processor(images=input, return_tensors="pt")
@@ -59,6 +94,8 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
     def postprocess(
         self,
         out: SemanticSegmenterOutput,
+        epsilon: float = 0.5,
+        include: list = [12, 20],  # person and car only
         **kwargs
     ) -> ObjectRepData:
 
@@ -69,9 +106,78 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
         if input is None or logits is None:
             raise Exception("Fatal error on model run.")
 
+        # Resize output segmentation map
+        target_size = (input.shape[0], input.shape[1])
+        upsampled_logits = torch.nn.functional.interpolate(
+            input=logits,
+            size=target_size,
+            mode='bilinear',
+            align_corners=False
+        )
+
         # TODO: diff conf per class
-        # TODO: Add output conversion from segmask
-        return ObjectRepData([], mask=torch.zeros_like(input))
+        label_prob = torch.softmax(upsampled_logits, dim=1)[0].detach().cpu()
+        (pred_label_prob, pred_label) = torch.max(label_prob, dim=0)
+        pred_label[pred_label_prob < epsilon] = 0
+
+        mask = torch.zeros((pred_label.shape[0], pred_label.shape[1]), dtype=torch.float16)
+        exclude_mask = reduce(
+            lambda x, y: torch.logical_and(x, (pred_label != y)),
+            include,
+            pred_label
+        )
+        include_mask = reduce(
+            lambda x, y: torch.logical_or(x, (pred_label == y)),
+            include[1:],
+            pred_label == include[0]
+        )
+        mask[exclude_mask] = 0
+        mask[include_mask] = pred_label[include_mask].to(torch.float16)
+        blocked_mask = mode_pool2d(mask, kernel_size=self.k, stride=self.k)
+        mask[include_mask] = 1
+
+        object_coordinates = []
+
+        (height, width) = blocked_mask.shape
+
+        # Iterate through block mask and pull every associated object
+        for w in range(1, width + 1):
+            for h in range(1, height + 1):
+                if blocked_mask[h-1][w-1] != 0:
+                    x = self.k*w - 1
+                    y = self.k*h - 1
+                    label = ADE_ID_TO_LABEL[str(int(blocked_mask[h-1][w-1].item()))]
+                    object_coordinates.append(
+                        ObjectXYCoordData(
+                            object_id=None,
+                            label=label,
+                            x=x,
+                            y=y
+                        )
+                    )
+                    # # Add a star or object onto the mask at (x, y)
+                    # cv2.drawMarker(
+                    #     mask.numpy(),  # Convert mask to numpy for cv2 operations
+                    #     position=(x, y),
+                    #     color=(1),  # Use a value of 1 for the mask
+                    #     markerType=cv2.MARKER_STAR,
+                    #     markerSize=10,
+                    #     thickness=1,
+                    #     line_type=cv2.LINE_AA
+                    # )
+                    # # Add text label near the object
+                    # cv2.putText(
+                    #     img=mask.numpy(),  # Convert mask to numpy for cv2 operations
+                    #     text=label,
+                    #     org=(x, y - 10),  # Position text slightly above the marker
+                    #     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                    #     fontScale=0.5,
+                    #     color=(1),  # Use a value of 1 for the mask
+                    #     thickness=1,
+                    #     lineType=cv2.LINE_AA
+                    # )
+
+        return ObjectRepData(object_coordinates=object_coordinates, mask=mask)
 
     def postprocess_to_image(
         self,
@@ -99,7 +205,7 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
         # TODO: Add per class prob exclusion
         pred_labels = torch.argmax(upsampled_logits, dim=1)[0].cpu().numpy()
 
-        # Resize, create color mask, and apply to original frame
+        # Create color mask and apply to original frame
         palette = np.array(ade_palette(), dtype=np.uint8)
         color_mask = palette[pred_labels]
         masked = cv2.addWeighted(frame, 1, color_mask, 0.5, 0)
@@ -114,7 +220,7 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
                 num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mask, connectivity=8)
 
                 for i in range(num_labels):
-                    if stats[i, cv2.CC_STAT_AREA] < 500:
+                    if stats[i, cv2.CC_STAT_AREA] < 200:
                         continue
                     cx, cy = centroids[i]
                     cx, cy = int(cx), int(cy)
