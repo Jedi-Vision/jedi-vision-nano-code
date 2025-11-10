@@ -1,15 +1,15 @@
-from jv.representations import SegFormerEnvironmentRepresentationModel
+from jv.representations import YoloEnvironmentRepresentationModel
 import cv2
-import time
-import torch
 from argparse import ArgumentParser
 import os
+import time
+
 
 parser = ArgumentParser()
 parser.add_argument("-d", "--device",
                     choices=['cpu', 'mps', 'cuda'], default="mps")
 parser.add_argument("-v", "--video",
-                    default="./videos/sidewalk_pov.mp4")
+                    default="../examples/videos/sidewalk_pov.mp4")
 parser.add_argument("-w", "--webcam",
                     action="store_true", default=False, help="Use webcam instead of input video.")
 parser.add_argument("-p", "--phone",
@@ -18,14 +18,17 @@ parser.add_argument("-t", "--text",
                     action="store_true", default=False, help="Add text labels for classes on seg-masks.")
 args = parser.parse_args()
 
-if args.video == "./videos/sidewalk_pov.mp4" and not (os.path.exists(args.video) or args.webcam or args.phone):
+if (
+    args.video == "../examples/videos/sidewalk_pov.mp4"
+    and not (os.path.exists(args.video) or args.webcam or args.phone)
+):
     print(
         "Please download example video from https://oregonstate.app.box.com/file/2035963501758 "
         "and put in `examples/videos`"
     )
     exit(1)
 
-model = SegFormerEnvironmentRepresentationModel("ade-b0", k=1, device=args.device)
+model = YoloEnvironmentRepresentationModel("yolo11", device=args.device)
 
 if args.webcam:
     cap = cv2.VideoCapture(0)  # run with webcam
@@ -53,30 +56,40 @@ while True:
     if frame_count % frame_skip != 0:
         continue
 
-    # Run frame through segformer and apply mask
-    preproc_time = time.time()
-    inputs = model.preprocess(torch.tensor(frame))
-    preproc_time = time.time() - preproc_time
+    # Run model and add mask to image
+    start = time.time()
+    out = model.run(frame)
+    end = time.time() - start
+    print(f"Inference took {end*1000:.4f}ms")
 
-    inference_time = time.time()
-    out = model.process(inputs)
-    inference_time = time.time() - inference_time
+    # Iterate over detected objects
+    for obj in out.object_coordinates:
+        x, y = obj.x, obj.y
+        label = obj.label if obj.label else ""
+        object_id = obj.object_id if obj.object_id else 0
 
-    postproc_time = time.time()
-    masked_frame = model.postprocess_to_image(out, frame, add_text_labels=args.text)
-    postproc_time = time.time() - postproc_time
-
-    if frame_count % 30 == 0:
-        print(
-            f"Frame {frame_count}/{total_frames}\n"
-            f"Preprocess: {preproc_time*1000:.4f}ms\n"
-            f"Inference: {inference_time*1000:.4f}ms\n"
-            f"Postprocess: {postproc_time*1000:.4f}ms\n"
-            f"Total: {(preproc_time + inference_time + postproc_time)*1000:.4f}ms\n"
+        # Draw points on an image same size as input.shape
+        cv2.circle(
+            img=frame,
+            center=(int(x), int(y)),
+            radius=5,
+            color=(0, 255, 0),  # Green color
+            thickness=-1
         )
 
-    # Display the result
-    cv2.imshow("Segmentation", masked_frame)
+        # Add text for label and object id
+        cv2.putText(
+            img=frame,
+            text=f"{label}:{object_id}",
+            org=(int(x) + 10, int(y) - 10),
+            fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+            fontScale=0.5,
+            color=(255, 255, 255),  # White color
+            thickness=1,
+            lineType=cv2.LINE_AA
+        )
+
+    cv2.imshow("Tracked Objects", frame)
 
     # Exit on 'q' key press
     if cv2.waitKey(1) & 0xFF == ord('q'):

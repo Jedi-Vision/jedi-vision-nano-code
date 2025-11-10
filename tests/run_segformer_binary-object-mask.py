@@ -1,4 +1,4 @@
-from jv.representations import SegFormerEnvironmentRepresentationModelClass
+from jv.representations import SegFormerEnvironmentRepresentationModel
 import cv2
 import torch
 from argparse import ArgumentParser
@@ -29,7 +29,7 @@ if (
     )
     exit(1)
 
-model = SegFormerEnvironmentRepresentationModelClass("ade-b0", k=32, device=args.device)
+model = SegFormerEnvironmentRepresentationModel("ade-b0", k=32, device=args.device)
 
 if args.webcam:
     cap = cv2.VideoCapture(0)  # run with webcam

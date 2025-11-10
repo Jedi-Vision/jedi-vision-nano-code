@@ -6,21 +6,31 @@ Description: This file contains the implementation of the SegFormerEnvironmentRe
              which is a model class for environment representation using SegFormer.
 """
 
-from .abstract import AbstractModelClass
+# PyTorch stuff
 import torch
 import torch.nn.functional as F
+
+# Local imports
 from .data import ObjectRepData, ObjectXYCoordData
+from .ade_palette import ade_palette
+from .ade_id import ADE_ID_TO_LABEL
+from .abstract import AbstractModelClass
+
+# Model imports
 from transformers import (
     BatchFeature,
     SegformerImageProcessorFast,
     SegformerForSemanticSegmentation,
 )
+from ultralytics.models import YOLO
+from ultralytics.engine.results import Results
 from transformers.modeling_outputs import SemanticSegmenterOutput
 import cv2
 import numpy as np
-from .ade_palette import ade_palette
-from .ade_id import ADE_ID_TO_LABEL
+
+# System stuff
 from functools import reduce
+from collections import defaultdict
 
 
 SEG_MODEL_ZOO = {
@@ -29,6 +39,10 @@ SEG_MODEL_ZOO = {
     "ade-b2": "nvidia/segformer-b2-finetuned-ade-512-512",
     "ade-b3": "nvidia/segformer-b3-finetuned-ade-512-512",
     "ade-b4": "nvidia/segformer-b4-finetuned-ade-512-512"
+}
+
+SEG_MODEL_ZOO = {
+    "yolo11": "yolo11n.pt"
 }
 
 CLASS_TO_CONF = {
@@ -65,7 +79,7 @@ def mode_pool2d(mask, kernel_size, stride):
     return mode_vals.view(H_out, W_out)
 
 
-class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
+class SegFormerEnvironmentRepresentationModel(AbstractModelClass):
     def __init__(self, seg_model_name: str, k: int, device: str):
         super().__init__(self._setup_model(seg_model_name), device)
         self.model.to(self.device)
@@ -104,7 +118,7 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
         input: torch.Tensor | None = kwargs.get("input", None)
 
         if input is None or logits is None:
-            raise Exception("Fatal error on model run.")
+            raise Exception("Fatal error on model run, no input frame provided.")
 
         # Resize output segmentation map
         target_size = (input.shape[0], input.shape[1])
@@ -190,7 +204,7 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
         logits = out.logits
 
         if logits is None:
-            raise Exception("Fatal error on model run.")
+            raise Exception("Fatal error on model run, no logits provided.")
 
         # Resize
         target_size = (frame.shape[0], frame.shape[1])
@@ -237,3 +251,70 @@ class SegFormerEnvironmentRepresentationModelClass(AbstractModelClass):
             return label_overlay
 
         return masked
+
+
+class YoloEnvironmentRepresentationModel(AbstractModelClass):
+
+    def __init__(self, model_name: str, device: str, retain_frames: int = 30):
+
+        self.model: YOLO  # fix type errors
+        super().__init__(self._setup_model(model_name), device)
+
+        self.track_history = defaultdict(lambda: [])
+        self.retain_frames = retain_frames
+
+    def _setup_model(self, yolo_model_name) -> YOLO:
+        return YOLO(SEG_MODEL_ZOO[yolo_model_name])
+
+    def run(self, input, **kwargs) -> ObjectRepData:
+        out = self.process(input, **kwargs)
+        return self.postprocess(out, input=input)
+
+    def preprocess(self, input) -> ...:
+        pass
+
+    def process(self, input) -> Results:
+        return self.model.track(input, persist=True, device=self.device)[0]
+
+    def postprocess(self, out: Results, **kwargs) -> ObjectRepData:
+
+        input: torch.Tensor | None = kwargs.get("input", None)
+
+        if input is None:
+            raise Exception("Fatal error on model run, no input frame provided.")
+
+        mask = torch.zeros_like(torch.tensor(input), dtype=torch.uint8)
+
+        if out.boxes and out.boxes.is_track:
+            object_coordinates = []
+            boxes = out.boxes.xywh.cpu() if out.boxes.xywh is torch.Tensor else out.boxes.xywh
+            object_ids = out.boxes.id.int().cpu().tolist() if isinstance(out.boxes.id, torch.Tensor) else \
+                (out.boxes.id.astype(int).tolist() if isinstance(out.boxes.id, np.ndarray) else None)
+            labels = out.boxes.cls.int().cpu().tolist() if isinstance(out.boxes.cls, torch.Tensor) else \
+                (out.boxes.cls.astype(int).tolist() if isinstance(out.boxes.cls, np.ndarray) else None)
+
+            if object_ids is None or labels is None:
+                raise Exception("Fatal error on model run, no labels or object id's found.")
+
+            for box, object_id, label_id in zip(boxes, object_ids, labels):
+                x, y, _, _ = box
+                track = self.track_history[object_id]
+                track.append((float(x), float(y)))
+
+                if len(track) > self.retain_frames:  # retain track for only 30 frames
+                    track.pop(0)
+
+                object_coordinates.append(
+                    ObjectXYCoordData(
+                        object_id=object_id,
+                        label=out.names[label_id],
+                        x=float(x),
+                        y=float(y)
+                    )
+                )
+
+                mask[int(y)][int(x)] = 1  # add pixel to mask
+
+            return ObjectRepData(object_coordinates, mask=mask)
+
+        return ObjectRepData([], mask=mask)
