@@ -82,8 +82,8 @@ class AudioBuffer:
         Worker for sending messages in buffer to the spatial audio server.
         """
 
-        running = True
-        while running:
+        self.running = True
+        while self.running:
 
             try:
                 message = self.q.get(timeout=0.001)
