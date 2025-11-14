@@ -1,3 +1,3 @@
-[submodule "tests/audio_buffer_protobuf/pbtools"]
-	path = tests/audio_buffer_protobuf/pbtools
+[submodule "tests/audio_buffer/protobuf/pbtools"]
+	path = tests/audio_buffer/protobuf/pbtools
 	url = https://github.com/eerimoq/pbtools.git

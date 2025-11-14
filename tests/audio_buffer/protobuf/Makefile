@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -O2 -lczmq -I/opt/homebrew/include -L/opt/homebrew/lib -I pbtools/lib/include
 LDFLAGS = 
 TARGET = server.out
-SRCS = server.c pbtools/lib/src/pbtools.c ../../src/jv/pb/objectrep.c
+SRCS = server.c pbtools/lib/src/pbtools.c ../../../src/jv/pb/objectrep.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
