@@ -3,13 +3,12 @@ from queue import Empty
 from ..representation import ObjectRepData
 from ..pb.objectrep_pb2 import ObjectRepData as PBObjectRepData  # type: ignore
 import zmq
-from zmq.sugar.socket import Socket
 import threading
 from typing import Literal
 import struct
 
 
-class AudioBuffer:
+class ObjectBuffer:
     """
         A one way audio buffer for transferring object data from Python
         to the Steam Audio Library process.
@@ -28,29 +27,30 @@ class AudioBuffer:
             addr (str, optional): The pathname for the socket. Default is "/tmp/jv/audio/0".
         """
 
-        self.q = Queue(maxsize=size)
+        self.max_size = size
+        self.q = Queue(size)
         self.ctx = zmq.Context()
-        self.start_client(self.ctx, addr)
+        self.addr = addr
+        self.thread = None
 
-    def start_client(self, ctx: zmq.Context[Socket[bytes]], addr: str):
-        self.socket = ctx.socket(zmq.REQ)
-        self.socket.connect(f"ipc://{addr}")
+    def start(self):
+        self.socket = self.ctx.socket(zmq.REQ)
+        self.socket.connect(f"ipc://{self.addr}")
         self.running = False
+        self.thread = threading.Thread(target=self._send_message)
+        self.thread.start()
 
-        threading.Thread(target=self.send_message_worker).start()
-
-    def kill_client(self):
+    def stop(self):
         self.q.join()
         self.running = False
+        if self.thread is not None:
+            self.thread.join()
         self.ctx.term()
 
-    def __del__(self):
-        self.kill_client()
-
-    def queue_message(self, message: ObjectRepData) -> None:
+    def put(self, message: ObjectRepData) -> None:
         self.q.put(message, timeout=0.001)
 
-    def serialize_message(
+    def _serialize_message(
         self,
         message: ObjectRepData,
         type: Literal['protobuf', 'struct'] = 'struct'
@@ -76,7 +76,7 @@ class AudioBuffer:
         elif type == "struct":
             return struct.pack("<h", 20)
 
-    def send_message_worker(self) -> None:
+    def _send_message(self) -> None:
         """
         Worker for sending messages in buffer to the spatial audio server.
         """
@@ -85,14 +85,18 @@ class AudioBuffer:
         while self.running:
 
             try:
+                if self.q.full():
+                    self.q.get()  # Remove the oldest frame to make space
+
                 message = self.q.get(timeout=0.001)
-                serialized_message = self.serialize_message(message)
+                serialized_message = self._serialize_message(message)
+
                 print("Sending message.")
                 self.socket.send(serialized_message)
                 self.socket.recv()  # must wait for audio server to recieve message
                 self.q.task_done()
             except Empty as e:
-                print(f"Audio buffer empty: {e}")
+                print(f"Object buffer empty: {e}")
                 pass
             except Exception as e:
                 raise Exception(f"Message send failure: {e}")

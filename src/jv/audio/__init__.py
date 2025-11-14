@@ -1,1 +1,1 @@
-from .buffer import AudioBuffer
+from .buffer import ObjectBuffer
