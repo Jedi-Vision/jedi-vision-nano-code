@@ -317,3 +317,35 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
             return ObjectRepData(object_coordinates, mask=mask)
 
         return ObjectRepData([], mask=mask)
+
+    def postprocess_to_image(
+        self,
+        out: Results
+    ) -> np.ndarray:
+
+        # Get the boxes and track IDs
+        if out.boxes and out.boxes.is_track:
+            boxes = out.boxes.xywh.cpu() if out.boxes.xywh is torch.Tensor else out.boxes.xywh
+            object_ids = out.boxes.id.int().cpu().tolist() if isinstance(out.boxes.id, torch.Tensor) else \
+                (out.boxes.id.astype(int).tolist() if isinstance(out.boxes.id, np.ndarray) else None)
+
+            if object_ids is None:
+                raise Exception("Fatal error on model run, no labels or object id's found.")
+
+            # Visualize the result on the frame
+            frame = out.plot()
+
+            # Plot the tracks
+            for box, object_id in zip(boxes, object_ids):
+                x, y, _, _ = box
+                track = self.track_history[object_id]
+                track.append((float(x), float(y)))  # x, y center point
+                if len(track) > 30:  # retain 30 tracks for 30 frames
+                    track.pop(0)
+
+                # Draw the tracking lines
+                points = np.hstack(track).astype(np.int32).reshape((-1, 1, 2))
+                cv2.polylines(frame, [points], isClosed=False, color=(230, 230, 230), thickness=10)
+            return frame
+        else:
+            raise Exception("Error on inference")
