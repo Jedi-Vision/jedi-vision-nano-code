@@ -1,3 +1,7 @@
+"""
+Request-and-reply client example code using ZeroMQ.
+"""
+
 import zmq
 
 

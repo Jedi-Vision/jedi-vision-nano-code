@@ -1,3 +1,7 @@
+/**
+ * Request-and-reply server example code using ZeroMQ.
+ */
+
 #include <czmq.h>
 
 
@@ -10,9 +14,9 @@ int main(int argc, char const *argv[])
 
     while (1) {
         char *str = zstr_recv(responder);
-        printf("Received Hello\n");
+        printf("%s\n", str);
         sleep (1);          //  Do some 'work'
-        zstr_send(responder, "World");
+        zstr_send(responder, "0");
         zstr_free(&str);
     }
     return 0;
