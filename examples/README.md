@@ -20,6 +20,8 @@ Vosk is a speech recognition toolkit that allows for super-fast offline speech t
 
 To use, manually install the `vosk` package with ```pip install vosk```.
 
+You might run into an issue with `sounddevice` failing to find `PortAudio`, see [here](https://stackoverflow.com/questions/49333582/portaudio-library-not-found-by-sounddevice) for a fix
+
 ```bash
 usage: run_vosk.py [-h] [-l] [-f FILENAME] [-d DEVICE] [-r SAMPLERATE] [-m MODEL]
 
