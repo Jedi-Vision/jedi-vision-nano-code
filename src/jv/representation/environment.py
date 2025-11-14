@@ -40,7 +40,7 @@ SEG_MODEL_ZOO = {
     "ade-b4": "nvidia/segformer-b4-finetuned-ade-512-512"
 }
 
-SEG_MODEL_ZOO = {
+YOLO_MODEL_ZOO = {
     "yolo11": "yolo11n.pt"
 }
 
@@ -263,7 +263,7 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
         self.retain_frames = retain_frames
 
     def _setup_model(self, yolo_model_name) -> YOLO:
-        return YOLO(SEG_MODEL_ZOO[yolo_model_name])
+        return YOLO(YOLO_MODEL_ZOO[yolo_model_name])
 
     def run(self, input, **kwargs) -> ObjectRepData:
         out = self.process(input, **kwargs)
