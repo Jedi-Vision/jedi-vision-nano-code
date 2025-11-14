@@ -6,7 +6,11 @@ The following folder contains important testing code for validating functionalit
 Depending on the serialization option, you need to test with different servers. All servers include a Makefile, but this is not guaranteed to work on anything but Apple Silicon devices.
 
 ### Protobuf
-This is the Protobuf server that deserializes the Protobuf data format. This server requires the `pbtools` submodule.
+This is the Protobuf server that deserializes the Protobuf data format. This server requires the `pbtools` submodule, and also requires running the following Poetry command.
+
+```bash
+poetry install --with protobuf
+```
 
 ### Struct
 This decodes the byte information into C struct data.
