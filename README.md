@@ -37,3 +37,9 @@
     ```bash
     source .venv/bin/activate
     ```
+
+5. (Optional) If you are running into a *"No module named jv"* error, try installing our `jv` library in editable mode.
+
+    ```bash
+    pip install -e .
+    ```
