@@ -1,14 +1,15 @@
-from jv.audio import AudioBuffer
+from jv.audio import ObjectBuffer
 from jv.representation import ObjectRepData, ObjectXYCoordData
 import time
 import torch
 
 
-buffer = AudioBuffer()
+buffer = ObjectBuffer()
+buffer.start()
 
 while True:
     print("Adding to queue...")
-    buffer.queue_message(ObjectRepData(
+    buffer.put(ObjectRepData(
         object_coordinates=[ObjectXYCoordData(
             object_id=1,
             label="car",
@@ -18,3 +19,5 @@ while True:
         mask=torch.ones((512, 512))
     ))
     time.sleep(0.1)
+
+buffer.stop()
