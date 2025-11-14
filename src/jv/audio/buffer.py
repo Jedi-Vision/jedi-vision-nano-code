@@ -1,11 +1,10 @@
-from queue import Queue
-from queue import Empty
+from queue import Queue, Empty
 from ..representation import ObjectRepData
 from ..pb.objectrep_pb2 import ObjectRepData as PBObjectRepData  # type: ignore
+from ..utils import serialize_dataclass
 import zmq
 import threading
 from typing import Literal
-import struct
 
 
 class ObjectBuffer:
@@ -74,7 +73,7 @@ class ObjectBuffer:
             serialized_message = message.to_protobuf(PBObjectRepData)
             return serialized_message.SerializeToString()
         elif type == "struct":
-            return struct.pack("<h", 20)
+            return serialize_dataclass(message)
 
     def _send_message(self) -> None:
         """
