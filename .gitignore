@@ -211,3 +211,4 @@ examples/videos/*.mp4
 *.pt
 
 *.out
+*.o
