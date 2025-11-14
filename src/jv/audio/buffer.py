@@ -19,7 +19,15 @@ class AudioBuffer:
         size: int = 0,
         addr: str = "localhost",
         port: int = 5555
-    ) -> None:
+    ):
+        """
+        Initializes the buffer with a queue, a ZeroMQ context, and starts a client connection.
+
+        Args:
+            size (int, optional): The maximum size of the queue. Defaults to 0, which means the queue is unbounded.
+            addr (str, optional): The address of the server to connect to. Defaults to "localhost".
+            port (int, optional): The port number of the server to connect to. Defaults to 5555.
+        """
 
         self.q = Queue(maxsize=size)
         self.ctx = zmq.Context()
@@ -36,6 +44,9 @@ class AudioBuffer:
         self.q.join()
         self.running = False
         self.ctx.term()
+
+    def __del__(self):
+        self.kill_client()
 
     def queue_message(self, message: ObjectRepData) -> None:
         self.q.put(message, timeout=0.001)

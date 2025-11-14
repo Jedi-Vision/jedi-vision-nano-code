@@ -1,6 +1,6 @@
 # Audio
 
-Since the STEAM audio library runs in C, we use sockets to communicate object information between the models and the spatial audio generator.
+Since the STEAM audio library runs in C, we maintain a buffer for object representation data and use sockets to communicate object information between the models and the spatial audio generator.
 
 ## ZeroMQ Installation
 
@@ -20,4 +20,14 @@ pip install pyzmq
 
 ## Usage
 
-Please see `example/` for example usage for a server in C, and a client in Python. The Makefile is set up for Apple Silicon, so you may need to tinker it for compilation on your unique device.
+Please see `example/` for example usage for a ZeroMQ server in C, and a client in Python. The Makefile is set up for Apple Silicon, so you may need to tinker it for compilation on your unique device.
+
+The `AudioBuffer` class provides an easy-to-use message buffer for transferring the object representation data from the Python models to the C spatial audio library.
+
+```python
+buffer = AudioBuffer()
+message = ObjectRepData(...)
+buffer.queue_message(message)
+```
+
+The message is then queued and automatically sent to the ZeroMQ C server to be processed.
