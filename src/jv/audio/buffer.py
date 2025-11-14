@@ -3,6 +3,7 @@ from queue import Empty
 from ..representation import ObjectRepData
 from ..pb.objectrep_pb2 import ObjectRepData as PBObjectRepData  # type: ignore
 import zmq
+from zmq.sugar.socket import Socket
 import threading
 from typing import Literal
 import struct
@@ -17,25 +18,23 @@ class AudioBuffer:
     def __init__(
         self,
         size: int = 0,
-        addr: str = "localhost",
-        port: int = 5555
+        addr: str = "/tmp/jv/audio/0"
     ):
         """
         Initializes the buffer with a queue, a ZeroMQ context, and starts a client connection.
 
         Args:
             size (int, optional): The maximum size of the queue. Defaults to 0, which means the queue is unbounded.
-            addr (str, optional): The address of the server to connect to. Defaults to "localhost".
-            port (int, optional): The port number of the server to connect to. Defaults to 5555.
+            addr (str, optional): The pathname for the socket. Default is "/tmp/jv/audio/0".
         """
 
         self.q = Queue(maxsize=size)
         self.ctx = zmq.Context()
-        self.start_client(self.ctx, addr, port)
+        self.start_client(self.ctx, addr)
 
-    def start_client(self, ctx, addr, port):
+    def start_client(self, ctx: zmq.Context[Socket[bytes]], addr: str):
         self.socket = ctx.socket(zmq.REQ)
-        self.socket.connect(f"tcp://{addr}:{port}")
+        self.socket.connect(f"ipc://{addr}")
         self.running = False
 
         threading.Thread(target=self.send_message_worker).start()
