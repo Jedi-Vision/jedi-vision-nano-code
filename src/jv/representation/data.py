@@ -50,6 +50,9 @@ class ObjectRepData:
 
 
 def dataclass_to_proto(dc, proto_cls):
+    """
+    Source: ChatGPT, thank the robot overlords above
+    """
     msg = proto_cls()
     for field in fields(dc):
         value = getattr(dc, field.name)
