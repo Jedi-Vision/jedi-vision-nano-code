@@ -1,4 +1,4 @@
-from jv.representations import YoloEnvironmentRepresentationModel
+from jv.representation import YoloEnvironmentRepresentationModel
 import cv2
 from argparse import ArgumentParser
 import os

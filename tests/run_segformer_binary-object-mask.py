@@ -1,4 +1,4 @@
-from jv.representations import SegFormerEnvironmentRepresentationModel
+from jv.representation import SegFormerEnvironmentRepresentationModel
 import cv2
 import torch
 from argparse import ArgumentParser
