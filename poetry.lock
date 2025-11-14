@@ -1258,7 +1258,7 @@ version = "0.47.0"
 description = "Google Protocol Buffers tools."
 optional = false
 python-versions = "*"
-groups = ["protobuf"]
+groups = ["main", "protobuf"]
 files = [
     {file = "pbtools-0.47.0.tar.gz", hash = "sha256:55646c433c67119c386e14348a834087e31893cd90cb3db59ab845e6cbd571a1"},
 ]
@@ -1458,7 +1458,7 @@ version = "6.33.1"
 description = ""
 optional = false
 python-versions = ">=3.9"
-groups = ["protobuf"]
+groups = ["main", "protobuf"]
 files = [
     {file = "protobuf-6.33.1-cp310-abi3-win32.whl", hash = "sha256:f8d3fdbc966aaab1d05046d0240dd94d40f2a8c62856d41eaa141ff64a79de6b"},
     {file = "protobuf-6.33.1-cp310-abi3-win_amd64.whl", hash = "sha256:923aa6d27a92bf44394f6abf7ea0500f38769d4b07f4be41cb52bd8b1123b9ed"},
@@ -2117,7 +2117,7 @@ version = "0.24.0"
 description = "Text parser."
 optional = false
 python-versions = "*"
-groups = ["protobuf"]
+groups = ["main", "protobuf"]
 files = [
     {file = "textparser-0.24.0-py3-none-any.whl", hash = "sha256:379d25cdb21332f403bfa37b9ef11192b7796340d2602d88fc9246bfdba2a1cf"},
     {file = "textparser-0.24.0.tar.gz", hash = "sha256:56f708e75aa9d002adb76d823ba6ef166d7ecec1e3e4ca4c1ca103f817568335"},
@@ -2484,4 +2484,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.11, <=3.14"
-content-hash = "1e43d51273f483f4c25ad9cc0b33c56e3155eb85be4fe967a523ff65dd9ae6be"
+content-hash = "b2029087d7bc4ebe9989078f06c3755e95005d4a9717fbbb2ed6718ce79a028b"
