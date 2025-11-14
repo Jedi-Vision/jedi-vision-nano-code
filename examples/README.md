@@ -1,5 +1,20 @@
 # Examples
 
+## YOLO
+You can run the YOLO tracking model via 1. webcam, 2. video file, or 3. phone camera (if continuity is established on a Mac with an iPhone).
+
+```bash
+usage: run_yolo.py [-h] [-d {cpu,mps,cuda}] [-v VIDEO] [-w] [-p] [-t]
+
+options:
+  -h, --help            show this help message and exit
+  -d {cpu,mps,cuda}, --device {cpu,mps,cuda}
+  -v VIDEO, --video VIDEO
+  -w, --webcam          Use webcam instead of input video.
+  -p, --phone           Use phone instead of input video.
+  -t, --text            Add text labels for classes on seg-masks.
+```
+
 ## SegFormer
 You can run the SegFormer model via 1. webcam, 2. video file, or 3. phone camera (if continuity is established on a Mac with an iPhone).
 
