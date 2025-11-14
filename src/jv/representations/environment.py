@@ -12,8 +12,7 @@ import torch.nn.functional as F
 
 # Local imports
 from .data import ObjectRepData, ObjectXYCoordData
-from .ade_palette import ade_palette
-from .ade_id import ADE_ID_TO_LABEL
+from .ade_utils import ade_palette, ADE_ID_TO_LABEL
 from .abstract import AbstractModelClass
 
 # Model imports
