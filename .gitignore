@@ -209,3 +209,5 @@ __marimo__/
 examples/videos/*.mp4
 .DS_Store
 *.pt
+
+*.out
