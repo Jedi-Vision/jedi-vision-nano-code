@@ -11,7 +11,7 @@ def main():
     #  Socket to talk to server
     print("Connecting to hello world server…")
     socket = context.socket(zmq.REQ)
-    socket.connect("ipc:///tmp/jv/audio/0")
+    socket.connect("ipc:///tmp/jv/audio/0.sock")
 
     #  Do 10 requests, waiting each time for a response
     for request in range(10):

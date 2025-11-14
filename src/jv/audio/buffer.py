@@ -18,7 +18,7 @@ class AudioBuffer:
     def __init__(
         self,
         size: int = 0,
-        addr: str = "/tmp/jv/audio/0"
+        addr: str = "/tmp/jv/audio/0.sock"
     ):
         """
         Initializes the buffer with a queue, a ZeroMQ context, and starts a client connection.

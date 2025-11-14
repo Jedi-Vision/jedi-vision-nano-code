@@ -13,8 +13,8 @@ typedef struct {
 int main(int argc, char const *argv[])
 {
     // Check if the directory for ipc_path exists, if not create it
-    char *ipc_path = "ipc:///tmp/jv/audio/0";
-    char *dir_path = "/tmp/jv/audio";
+    char *ipc_path = "ipc:///tmp/jv/audio/0.sock";
+    char *dir_path = "/tmp/jv/audio/";
     _mkdir(dir_path, 0777);
 
     //  Socket to talk to clients

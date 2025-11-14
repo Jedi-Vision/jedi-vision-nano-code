@@ -8,7 +8,7 @@ int _mkdir(const char *dir, mode_t mode) {
 
     struct stat st = {0};
     if (stat(dir, &st) == 0) {
-        printf("Directory exists.");
+        printf("Directory exists.\n");
         return EEXIST;
     }
 
