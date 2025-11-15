@@ -7,22 +7,21 @@ Description: This file defines data representations for object coordinate data a
              associated metadata and a mask tensor.
 """
 
-from typing import Union, List
 from dataclasses import dataclass, fields, is_dataclass
 import torch
 
 
 @dataclass
 class ObjectXYCoordData:
-    object_id: Union[int, None]
-    label: Union[str, None]
     x: float
     y: float
+    object_id: int = -1
+    label: int = -1
 
 
 @dataclass
 class ObjectRepData:
-    object_coordinates: List[ObjectXYCoordData]
+    object_coordinates: list[ObjectXYCoordData]
     mask: torch.Tensor
 
     def to_dict(self):
