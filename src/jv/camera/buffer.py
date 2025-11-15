@@ -5,7 +5,13 @@ import threading
 
 class FrameBuffer:
 
-    def __init__(self, size: int = 0, camera_index: int = 0):
+    def __init__(
+        self,
+        size: int = 0,
+        camera_index: int | str = 0,
+        warmup_frames: int = 30,
+        frame_skip: int = 2
+    ):
         """
         A one-way frame buffer for reading from a Camera stream using cv2.
 
@@ -19,6 +25,8 @@ class FrameBuffer:
         self.q = Queue(size)
         self.capture = cv2.VideoCapture(camera_index)
         self.frame_count = 0
+        self.frame_skip = frame_skip
+        self.warmup_frames = warmup_frames
         self.running = False
         self.thread = None
 
@@ -42,12 +50,21 @@ class FrameBuffer:
         """Worker for capturing frames from the camera and storing them in the queue."""
         while self.running:
             ret, frame = self.capture.read()
+            self.frame_count += 1
+
+            # Warmup
+            if self.frame_count < self.warmup_frames:
+                continue
+
+            # Skip frame
+            if self.frame_count % self.frame_skip != 0:
+                continue
+
             if not ret:
                 break
             if self.q.full():
-                self.q.get()  # Remove the oldest frame to make space
-            self.q.put(frame)
-            self.frame_count += 1
+                self.q.get(timeout=0.001)  # Remove the oldest frame to make space
+            self.q.put(frame, timeout=0.001)
 
     def get(self):
         """
@@ -56,7 +73,7 @@ class FrameBuffer:
         :return: The next frame, or None if the queue is empty.
         """
         try:
-            frame = self.q.get()
+            frame = self.q.get(timeout=0.001)
             self.q.task_done()
             return frame
         except Empty as e:
