@@ -159,11 +159,10 @@ class SegFormerEnvironmentRepresentationModel(AbstractModelClass):
                 if blocked_mask[h-1][w-1] != 0:
                     x = self.k*w - 1
                     y = self.k*h - 1
-                    label = ADE_ID_TO_LABEL[str(int(blocked_mask[h-1][w-1].item()))]
+                    # label = ADE_ID_TO_LABEL[str(int(blocked_mask[h-1][w-1].item()))]
                     object_coordinates.append(
                         ObjectXYCoordData(
-                            object_id=None,
-                            label=label,
+                            label=int(blocked_mask[h-1][w-1].item()),
                             x=x,
                             y=y
                         )
@@ -282,9 +281,14 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
         if input is None:
             raise Exception("Fatal error on model run, no input frame provided.")
 
-        mask = torch.zeros_like(torch.tensor(input), dtype=torch.uint8)
+        mask = torch.zeros((input.shape[0], input.shape[1]), dtype=torch.uint8)
 
         if out.boxes and out.boxes.is_track:
+            frame = out.plot()
+            cv2.imshow("track", frame)
+            # Break the loop if 'q' is pressed
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                pass
             object_coordinates = []
             boxes = out.boxes.xywh.cpu() if out.boxes.xywh is torch.Tensor else out.boxes.xywh
             object_ids = out.boxes.id.int().cpu().tolist() if isinstance(out.boxes.id, torch.Tensor) else \
@@ -306,7 +310,7 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
                 object_coordinates.append(
                     ObjectXYCoordData(
                         object_id=object_id,
-                        label=out.names[label_id],
+                        label=label_id,
                         x=float(x),
                         y=float(y)
                     )
