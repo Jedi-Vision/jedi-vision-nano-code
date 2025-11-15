@@ -14,9 +14,16 @@ class Driver:
         object_buffer_size: int = 0,
         frame_buffer_size: int = 0,
         warmup_frames: int = 30,
+        camera_index: str | int = 0,
+        frame_skip: int = 2
     ) -> None:
 
-        self.frame_buffer = FrameBuffer(size=frame_buffer_size)
+        self.frame_buffer = FrameBuffer(
+            size=frame_buffer_size,
+            camera_index=camera_index,
+            warmup_frames=warmup_frames,
+            frame_skip=frame_skip
+        )
         self.object_buffer = ObjectBuffer(size=object_buffer_size)
         self.env_model = YoloEnvironmentRepresentationModel(
             model_name=object_model_name,
@@ -24,7 +31,6 @@ class Driver:
             retain_frames=retain_frames
         )
         self.scene_model = None
-        self.warmup_frames = warmup_frames
 
     def model_run(self, frame):
 
@@ -36,16 +42,14 @@ class Driver:
 
     def run(self):
 
-        print("Starting frame and object buffer.")
-        self.frame_buffer.start()
+        print("Starting...")
         self.object_buffer.start()
+        self.frame_buffer.start()
 
-        print("Starting run loop.")
         while True:
 
-            if self.frame_buffer.frame_count < self.warmup_frames:
-                continue
-
             frame = self.frame_buffer.get()
+            if frame is None:
+                continue
             msg = self.env_model.run(frame)
             self.object_buffer.put(msg)
