@@ -3,7 +3,8 @@ CFLAGS = -Wall -Wextra -O2 -lczmq -I/opt/homebrew/include -L/opt/homebrew/lib
 LDFLAGS = 
 TARGET = server.out
 SRCS = server.c \
-	../../../src/c_utils/c_utils.c
+	../../../src/c_utils/c_utils.c \
+	../../../src/c_utils/parse_bytes.c 
 OBJS = $(SRCS:.c=.o)
 
 all: $(TARGET)
