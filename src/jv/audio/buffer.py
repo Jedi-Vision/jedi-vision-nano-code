@@ -1,7 +1,7 @@
 from queue import Queue, Empty
 from ..representation import ObjectRepData
 from ..pb.objectrep_pb2 import ObjectRepData as PBObjectRepData  # type: ignore
-from ..utils import serialize_dataclass
+from ..serial import serialize_dataclass
 import zmq
 import threading
 from typing import Literal
@@ -47,6 +47,8 @@ class ObjectBuffer:
         self.ctx.term()
 
     def put(self, message: ObjectRepData) -> None:
+        if self.q.full():
+            self.q.get(timeout=0.001)  # Remove the oldest frame to make space
         self.q.put(message, timeout=0.001)
 
     def _serialize_message(
@@ -90,12 +92,12 @@ class ObjectBuffer:
                 message = self.q.get(timeout=0.001)
                 serialized_message = self._serialize_message(message)
 
-                print("Sending message.")
+                # print("Sending message.")
                 self.socket.send(serialized_message)
                 self.socket.recv()  # must wait for audio server to recieve message
                 self.q.task_done()
-            except Empty as e:
-                print(f"Object buffer empty: {e}")
+            except Empty:
+                # print("Object buffer empty")
                 pass
             except Exception as e:
                 raise Exception(f"Message send failure: {e}")
