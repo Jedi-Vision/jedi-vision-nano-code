@@ -1,6 +1,7 @@
 import cv2
 from queue import Queue, Empty
 import threading
+import time
 
 
 class FrameBuffer:
@@ -10,15 +11,21 @@ class FrameBuffer:
         size: int = 0,
         camera_index: int | str = 0,
         warmup_frames: int = 30,
-        frame_skip: int = 2
+        frame_skip: int = 2,
+        frame_rate: int = 30,
     ):
         """
         A one-way frame buffer for reading from a Camera stream using cv2.
 
         Automatically starts capturing on instantiation.
 
-        :param camera_index: Index of the camera to capture from (default is 0).
-        :param max_size: Maximum number of frames to store in the queue.
+        Args:
+            size (int, optional): Maximum number of frames to store in the queue.
+            camera_index (int | str, optional): Index of the camera to capture from (default is 0).
+            warmup_frames (int, optional): Number of frames to run without adding to queue.
+            frame_skip (int, optional): Number of frames to skip over (to decrease throughput)
+            frame_rate (int, optional): Frame rate of video (default 30fps), will sleep to ensure
+                that video frames are not added to queue faster than frame rate of video.
         """
         self.camera_index = camera_index
         self.max_size = size
@@ -27,6 +34,7 @@ class FrameBuffer:
         self.frame_count = 0
         self.frame_skip = frame_skip
         self.warmup_frames = warmup_frames
+        self.frame_rate = frame_rate
         self.running = False
         self.thread = None
 
@@ -59,6 +67,9 @@ class FrameBuffer:
             # Skip frame
             if self.frame_count % self.frame_skip != 0:
                 continue
+
+            # Ensure that throughput does not exceed video framerate
+            time.sleep(1/self.frame_rate)
 
             if not ret:
                 break
