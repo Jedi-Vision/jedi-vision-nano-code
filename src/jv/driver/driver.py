@@ -1,5 +1,6 @@
 from jv.audio import ObjectBuffer
 from jv.representation import YoloEnvironmentRepresentationModel
+from jv.scene.video_depth_anything.video_depth_anything.video_depth_stream import VideoDepthAnything
 from jv.camera import FrameBuffer
 from typing import Literal
 
@@ -24,13 +25,16 @@ class Driver:
             warmup_frames=warmup_frames,
             frame_skip=frame_skip
         )
-        self.object_buffer = ObjectBuffer(size=object_buffer_size)
+        
         self.env_model = YoloEnvironmentRepresentationModel(
             model_name=object_model_name,
             device=device,
             retain_frames=retain_frames
         )
-        self.scene_model = None
+        self.object_buffer = ObjectBuffer(size=object_buffer_size)
+        self.scene_model = VideoDepthAnything()
+        self.device = device
+        self.depth_maps = []
 
     def model_run(self, frame):
 
@@ -53,3 +57,10 @@ class Driver:
                 continue
             msg = self.env_model.run(frame)
             self.object_buffer.put(msg)
+            depth = self.scene_model.infer_video_depth_one(
+                        frame, 
+                        input_size=len(frame[1]), 
+                        device=self.device, 
+                        fp32=True
+                    )
+            self.depth_maps.append(depth)
