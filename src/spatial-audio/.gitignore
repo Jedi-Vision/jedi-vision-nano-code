@@ -1,0 +1,81 @@
+# Build directories
+build/
+cmake-build-*/
+
+# CMake cache and generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+*.cmake
+!CMakeLists.txt
+
+# Compiled binaries
+*.exe
+*.out
+*.app
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+
+# Object files
+*.o
+*.obj
+*.lo
+*.slo
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# vcpkg
+vcpkg_installed/
+.vcpkg/
+
+# SOFA HRTF files
+D2_HRIR_SOFA/
+*.sofa
+
+# Output files
+output*.wav
+*.wav
+!sample_music.wav
+!sample_music_2.wav
+
+# Logs
+*.log
+vcpkg-manifest-install.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Cache directories
+.cache/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Trajectory exports
+trajectory.csv
+trajectory_*.png
+
+# Test files (uncomment if you want to ignore test outputs)
+# test_output/
+
