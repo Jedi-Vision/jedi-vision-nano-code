@@ -41,7 +41,7 @@ void jv_object_xy_coord_data_init(
 {
     self_p->base.heap_p = heap_p;
     self_p->object_id = 0;
-    self_p->label_p = "";
+    self_p->label = 0;
     self_p->x = 0;
     self_p->y = 0;
 }
@@ -52,7 +52,7 @@ void jv_object_xy_coord_data_encode_inner(
 {
     pbtools_encoder_write_float(encoder_p, 4, self_p->y);
     pbtools_encoder_write_float(encoder_p, 3, self_p->x);
-    pbtools_encoder_write_string(encoder_p, 2, self_p->label_p);
+    pbtools_encoder_write_int32(encoder_p, 2, self_p->label);
     pbtools_encoder_write_int32(encoder_p, 1, self_p->object_id);
 }
 
@@ -70,7 +70,7 @@ void jv_object_xy_coord_data_decode_inner(
             break;
 
         case 2:
-            pbtools_decoder_read_string(decoder_p, wire_type, &self_p->label_p);
+            self_p->label = pbtools_decoder_read_int32(decoder_p, wire_type);
             break;
 
         case 3:

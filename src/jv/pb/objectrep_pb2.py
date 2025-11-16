@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fobjectrep.proto\x12\x02jv\"K\n\x11ObjectXYCoordData\x12\x11\n\tobject_id\x18\x01 \x01(\x05\x12\r\n\x05label\x18\x02 \x01(\t\x12\t\n\x01x\x18\x03 \x01(\x02\x12\t\n\x01y\x18\x04 \x01(\x02\"P\n\rObjectRepData\x12\x31\n\x12object_coordinates\x18\x01 \x03(\x0b\x32\x15.jv.ObjectXYCoordData\x12\x0c\n\x04mask\x18\x02 \x01(\x0c\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fobjectrep.proto\x12\x02jv\"K\n\x11ObjectXYCoordData\x12\x11\n\tobject_id\x18\x01 \x01(\x05\x12\r\n\x05label\x18\x02 \x01(\x05\x12\t\n\x01x\x18\x03 \x01(\x02\x12\t\n\x01y\x18\x04 \x01(\x02\"P\n\rObjectRepData\x12\x31\n\x12object_coordinates\x18\x01 \x03(\x0b\x32\x15.jv.ObjectXYCoordData\x12\x0c\n\x04mask\x18\x02 \x01(\x0c\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)

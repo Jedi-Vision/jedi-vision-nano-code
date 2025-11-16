@@ -4,7 +4,7 @@ package jv;
 
 message ObjectXYCoordData {
     int32 object_id = 1;
-    string label = 2;
+    int32 label = 2;
     float x = 3;
     float y = 4;
 }

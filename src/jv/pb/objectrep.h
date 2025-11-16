@@ -48,7 +48,7 @@ struct jv_object_xy_coord_data_repeated_t {
 struct jv_object_xy_coord_data_t {
     struct pbtools_message_base_t base;
     int32_t object_id;
-    char *label_p;
+    int32_t label;
     float x;
     float y;
 };
