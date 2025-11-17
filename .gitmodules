@@ -1,3 +1,6 @@
 [submodule "tests/object_buffer/protobuf/pbtools"]
 	path = tests/object_buffer/protobuf/pbtools
 	url = https://github.com/eerimoq/pbtools.git
+[submodule "src/spatial-audio"]
+	path = src/spatial-audio
+	url = https://github.com/Jedi-Vision/spatial-audio.git
