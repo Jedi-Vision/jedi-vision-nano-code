@@ -1,6 +1,6 @@
 from jv.audio import ObjectBuffer
 from jv.representation import YoloEnvironmentRepresentationModel
-# from jv.scene.video_depth_anything.video_depth_anything.video_depth_stream import VideoDepthAnything
+# from jv.scene.video_depth_anything_code.video_depth_anything.video_depth_stream import VideoDepthAnything
 from jv.camera import FrameBuffer
 from typing import Literal
 # import torch
@@ -35,19 +35,13 @@ class Driver:
             retain_frames=retain_frames
         )
         self.object_buffer = ObjectBuffer(size=object_buffer_size)
-        # self.scene_model = VideoDepthAnything()
+        # self.scene_model = VideoDepthAnything(encoder='vits', features=64, out_channels=[48, 96, 192, 384])
         self.device = device
         self.depth_maps = []
 
     def model_run(self, frame):
 
         msg = self.env_model.run(frame)
-        # depth = depth = self.scene_model.infer_video_depth_one(
-        #     frame,
-        #     input_size=len(frame[1]),
-        #     device=self.device,
-        #     fp32=True
-        # )
         # msg.mask = torch.mul(msg.mask, depth)  # apply binary mask to depth mask
 
         return msg
@@ -65,3 +59,4 @@ class Driver:
                 continue
             msg = self.model_run(frame)
             self.object_buffer.put(msg)
+            self.scene_model.infer_video_depth_one(frame, input_size=518, device=self.device, fp32=True)
