@@ -25,6 +25,11 @@
     ```bash
     git clone git@github.com:Jedi-Vision/jedi-vision-nano-code.git
     ```
+    
+    Also make sure to initialize the submodules,
+    ```bash
+    git submodule update --init --recursive
+    ```
 
 3. (Optional) If you'd like poetry to automatically create a virtual environment *in the project* run the following.
 
