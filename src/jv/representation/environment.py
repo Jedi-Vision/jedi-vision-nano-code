@@ -266,17 +266,18 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
 
     def run(self, input, **kwargs) -> ObjectRepData:
         out = self.process(input, **kwargs)
-        return self.postprocess(out, input=input)
+        return self.postprocess(out, input=input, **kwargs)
 
     def preprocess(self, input) -> ...:
         pass
 
-    def process(self, input) -> Results:
+    def process(self, input, **kwargs) -> Results:
         return self.model.track(input, persist=True, device=self.device)[0]
 
     def postprocess(self, out: Results, **kwargs) -> ObjectRepData:
 
         input: torch.Tensor | None = kwargs.get("input", None)
+        show_det: bool = kwargs.get("show_det", False)
 
         if input is None:
             raise Exception("Fatal error on model run, no input frame provided.")
@@ -284,11 +285,14 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
         mask = torch.zeros((input.shape[0], input.shape[1]), dtype=torch.uint8)
 
         if out.boxes and out.boxes.is_track:
-            frame = out.plot()
-            cv2.imshow("track", frame)
-            # Break the loop if 'q' is pressed
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                pass
+
+            if show_det:
+                frame = out.plot()
+                cv2.imshow("track", frame)
+                # Break the loop if 'q' is pressed
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    pass
+
             object_coordinates = []
             boxes = out.boxes.xywh.cpu() if out.boxes.xywh is torch.Tensor else out.boxes.xywh
             object_ids = out.boxes.id.int().cpu().tolist() if isinstance(out.boxes.id, torch.Tensor) else \

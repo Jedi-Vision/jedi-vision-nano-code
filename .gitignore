@@ -213,3 +213,4 @@ examples/videos/*.mp4
 *.out
 *.o
 .vscode
+checkpoints/*

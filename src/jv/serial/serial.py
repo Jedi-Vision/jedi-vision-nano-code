@@ -189,7 +189,9 @@ def serialize_dataclass(dc) -> bytes:
 
     For Tensor or ndarrays, the prescence and end is denoted with `$`, and then
     the type is given with a unique integer id from DTYPE_TO_NUM, and the shape
-    is given with parentheses and 32-bit integers for shapes `(x1x2xn)`.
+    is given with parentheses and 32-bit integers for shapes `(x1x2)`. Currently,
+    only two dimensions can be sent.
+
     Tensors or ndarrays are converted into byte strings. For a Tensor this first
     requires converting to an ndarray.
 

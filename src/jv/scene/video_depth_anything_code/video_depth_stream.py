@@ -21,13 +21,40 @@ import numpy as np
 from .dinov2 import DINOv2
 from .dpt_temporal import DPTHeadTemporal
 from .util.transform import Resize, NormalizeImage, PrepareForNet
+import imageio
 
-from utils.util import compute_scale_and_shift, get_interpolate_frames
+import matplotlib.cm as cm
+
 
 # infer settings, do not change
 INFER_LEN = 32
 OVERLAP = 10
 INTERP_LEN = 8
+
+
+MODEL_CONFIGS = {
+        'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
+        'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
+        'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]},
+    }
+
+
+def save_video(frames, output_video_path, fps=10, is_depths=False, grayscale=False):
+    writer = imageio.get_writer(output_video_path, fps=fps, macro_block_size=1, codec='libx264', ffmpeg_params=['-crf', '18'])
+    if is_depths:
+        colormap = np.array(cm.get_cmap("inferno").colors)
+        d_min, d_max = frames.min(), frames.max()
+        for i in range(frames.shape[0]):
+            depth = frames[i]
+            depth_norm = ((depth - d_min) / (d_max - d_min) * 255).astype(np.uint8)
+            depth_vis = (colormap[depth_norm] * 255).astype(np.uint8) if not grayscale else depth_norm
+            writer.append_data(depth_vis)
+    else:
+        for i in range(frames.shape[0]):
+            writer.append_data(frames[i])
+
+    writer.close()
+
 
 class VideoDepthAnything(nn.Module):
     def __init__(
@@ -47,7 +74,7 @@ class VideoDepthAnything(nn.Module):
             "vitb": [2, 5, 8, 11],
             'vitl': [4, 11, 17, 23]
         }
-        
+
         self.encoder = encoder
         self.pretrained = DINOv2(model_name=encoder)
 
@@ -58,10 +85,11 @@ class VideoDepthAnything(nn.Module):
         self.gap = (INFER_LEN - OVERLAP) * 2 - 1 - (OVERLAP - INTERP_LEN)
         assert self.gap == 41
         self.id = -1
+        self.colormap = np.array(cm.get_cmap("inferno").colors)
 
     def forward(self, x):
         return self.forward_depth(self.forward_features(x), x.shape)[0]
-    
+
     def forward_features(self, x):
         features = self.pretrained.get_intermediate_layers(x.flatten(0,1), self.intermediate_layer_idx[self.encoder], return_class_token=True)
         return features
@@ -73,7 +101,7 @@ class VideoDepthAnything(nn.Module):
         depth = F.interpolate(depth, size=(H, W), mode="bilinear", align_corners=True)
         depth = F.relu(depth)
         return depth.squeeze(1).unflatten(0, (B, T)), cur_cached_hidden_state_list # return shape [B, T, H, W]
-    
+
     def infer_video_depth_one(self, frame, input_size=518, device='cuda', fp32=False):
         self.id += 1
 
