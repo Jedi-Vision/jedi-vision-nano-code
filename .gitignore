@@ -214,3 +214,5 @@ examples/videos/*.mp4
 *.o
 .vscode
 checkpoints/*
+*.mov
+output/*

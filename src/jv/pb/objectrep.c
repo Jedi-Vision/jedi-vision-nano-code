@@ -35,30 +35,32 @@
 #    error "Number of bits in a char must be 8."
 #endif
 
-void jv_object_xy_coord_data_init(
-    struct jv_object_xy_coord_data_t *self_p,
+void jv_object_coord_data_init(
+    struct jv_object_coord_data_t *self_p,
     struct pbtools_heap_t *heap_p)
 {
     self_p->base.heap_p = heap_p;
-    self_p->object_id = 0;
+    self_p->id = 0;
     self_p->label = 0;
-    self_p->x = 0;
-    self_p->y = 0;
+    self_p->x_2d = 0;
+    self_p->y_2d = 0;
+    self_p->depth = 0;
 }
 
-void jv_object_xy_coord_data_encode_inner(
+void jv_object_coord_data_encode_inner(
     struct pbtools_encoder_t *encoder_p,
-    struct jv_object_xy_coord_data_t *self_p)
+    struct jv_object_coord_data_t *self_p)
 {
-    pbtools_encoder_write_float(encoder_p, 4, self_p->y);
-    pbtools_encoder_write_float(encoder_p, 3, self_p->x);
+    pbtools_encoder_write_float(encoder_p, 5, self_p->depth);
+    pbtools_encoder_write_float(encoder_p, 4, self_p->y_2d);
+    pbtools_encoder_write_float(encoder_p, 3, self_p->x_2d);
     pbtools_encoder_write_int32(encoder_p, 2, self_p->label);
-    pbtools_encoder_write_int32(encoder_p, 1, self_p->object_id);
+    pbtools_encoder_write_int32(encoder_p, 1, self_p->id);
 }
 
-void jv_object_xy_coord_data_decode_inner(
+void jv_object_coord_data_decode_inner(
     struct pbtools_decoder_t *decoder_p,
-    struct jv_object_xy_coord_data_t *self_p)
+    struct jv_object_coord_data_t *self_p)
 {
     int wire_type;
 
@@ -66,7 +68,7 @@ void jv_object_xy_coord_data_decode_inner(
         switch (pbtools_decoder_read_tag(decoder_p, &wire_type)) {
 
         case 1:
-            self_p->object_id = pbtools_decoder_read_int32(decoder_p, wire_type);
+            self_p->id = pbtools_decoder_read_int32(decoder_p, wire_type);
             break;
 
         case 2:
@@ -74,11 +76,15 @@ void jv_object_xy_coord_data_decode_inner(
             break;
 
         case 3:
-            self_p->x = pbtools_decoder_read_float(decoder_p, wire_type);
+            self_p->x_2d = pbtools_decoder_read_float(decoder_p, wire_type);
             break;
 
         case 4:
-            self_p->y = pbtools_decoder_read_float(decoder_p, wire_type);
+            self_p->y_2d = pbtools_decoder_read_float(decoder_p, wire_type);
+            break;
+
+        case 5:
+            self_p->depth = pbtools_decoder_read_float(decoder_p, wire_type);
             break;
 
         default:
@@ -88,47 +94,47 @@ void jv_object_xy_coord_data_decode_inner(
     }
 }
 
-void jv_object_xy_coord_data_encode_repeated_inner(
+void jv_object_coord_data_encode_repeated_inner(
     struct pbtools_encoder_t *encoder_p,
     int field_number,
-    struct jv_object_xy_coord_data_repeated_t *repeated_p)
+    struct jv_object_coord_data_repeated_t *repeated_p)
 {
     pbtools_encode_repeated_inner(
         encoder_p,
         field_number,
         (struct pbtools_repeated_message_t *)repeated_p,
-        sizeof(struct jv_object_xy_coord_data_t),
-        (pbtools_message_encode_inner_t)jv_object_xy_coord_data_encode_inner);
+        sizeof(struct jv_object_coord_data_t),
+        (pbtools_message_encode_inner_t)jv_object_coord_data_encode_inner);
 }
 
-void jv_object_xy_coord_data_decode_repeated_inner(
+void jv_object_coord_data_decode_repeated_inner(
     struct pbtools_decoder_t *decoder_p,
     struct pbtools_repeated_info_t *repeated_info_p,
-    struct jv_object_xy_coord_data_repeated_t *repeated_p)
+    struct jv_object_coord_data_repeated_t *repeated_p)
 {
     pbtools_decode_repeated_inner(
         decoder_p,
         repeated_info_p,
         (struct pbtools_repeated_message_t *)repeated_p,
-        sizeof(struct jv_object_xy_coord_data_t),
-        (pbtools_message_init_t)jv_object_xy_coord_data_init,
-        (pbtools_message_decode_inner_t)jv_object_xy_coord_data_decode_inner);
+        sizeof(struct jv_object_coord_data_t),
+        (pbtools_message_init_t)jv_object_coord_data_init,
+        (pbtools_message_decode_inner_t)jv_object_coord_data_decode_inner);
 }
 
-struct jv_object_xy_coord_data_t *
-jv_object_xy_coord_data_new(
+struct jv_object_coord_data_t *
+jv_object_coord_data_new(
     void *workspace_p,
     size_t size)
 {
     return (pbtools_message_new(
                 workspace_p,
                 size,
-                sizeof(struct jv_object_xy_coord_data_t),
-                (pbtools_message_init_t)jv_object_xy_coord_data_init));
+                sizeof(struct jv_object_coord_data_t),
+                (pbtools_message_init_t)jv_object_coord_data_init));
 }
 
-int jv_object_xy_coord_data_encode(
-    struct jv_object_xy_coord_data_t *self_p,
+int jv_object_coord_data_encode(
+    struct jv_object_coord_data_t *self_p,
     uint8_t *encoded_p,
     size_t size)
 {
@@ -136,11 +142,11 @@ int jv_object_xy_coord_data_encode(
                 &self_p->base,
                 encoded_p,
                 size,
-                (pbtools_message_encode_inner_t)jv_object_xy_coord_data_encode_inner));
+                (pbtools_message_encode_inner_t)jv_object_coord_data_encode_inner));
 }
 
-int jv_object_xy_coord_data_decode(
-    struct jv_object_xy_coord_data_t *self_p,
+int jv_object_coord_data_decode(
+    struct jv_object_coord_data_t *self_p,
     const uint8_t *encoded_p,
     size_t size)
 {
@@ -148,7 +154,7 @@ int jv_object_xy_coord_data_decode(
                 &self_p->base,
                 encoded_p,
                 size,
-                (pbtools_message_decode_inner_t)jv_object_xy_coord_data_decode_inner));
+                (pbtools_message_decode_inner_t)jv_object_coord_data_decode_inner));
 }
 
 void jv_object_rep_data_init(
@@ -156,19 +162,21 @@ void jv_object_rep_data_init(
     struct pbtools_heap_t *heap_p)
 {
     self_p->base.heap_p = heap_p;
-    self_p->object_coordinates.length = 0;
-    pbtools_bytes_init(&self_p->mask);
+    self_p->frame_number = 0;
+    self_p->timestamp_ms = 0;
+    self_p->objects.length = 0;
 }
 
 void jv_object_rep_data_encode_inner(
     struct pbtools_encoder_t *encoder_p,
     struct jv_object_rep_data_t *self_p)
 {
-    pbtools_encoder_write_bytes(encoder_p, 2, &self_p->mask);
-    jv_object_xy_coord_data_encode_repeated_inner(
+    jv_object_coord_data_encode_repeated_inner(
         encoder_p,
-        1,
-        &self_p->object_coordinates);
+        3,
+        &self_p->objects);
+    pbtools_encoder_write_float(encoder_p, 2, self_p->timestamp_ms);
+    pbtools_encoder_write_int32(encoder_p, 1, self_p->frame_number);
 }
 
 void jv_object_rep_data_decode_inner(
@@ -176,21 +184,25 @@ void jv_object_rep_data_decode_inner(
     struct jv_object_rep_data_t *self_p)
 {
     int wire_type;
-    struct pbtools_repeated_info_t repeated_info_object_coordinates;
+    struct pbtools_repeated_info_t repeated_info_objects;
 
-    pbtools_repeated_info_init(&repeated_info_object_coordinates, 1);
+    pbtools_repeated_info_init(&repeated_info_objects, 3);
 
     while (pbtools_decoder_available(decoder_p)) {
         switch (pbtools_decoder_read_tag(decoder_p, &wire_type)) {
 
         case 1:
-            pbtools_repeated_info_decode(&repeated_info_object_coordinates,
-                                         decoder_p,
-                                         wire_type);
+            self_p->frame_number = pbtools_decoder_read_int32(decoder_p, wire_type);
             break;
 
         case 2:
-            pbtools_decoder_read_bytes(decoder_p, wire_type, &self_p->mask);
+            self_p->timestamp_ms = pbtools_decoder_read_float(decoder_p, wire_type);
+            break;
+
+        case 3:
+            pbtools_repeated_info_decode(&repeated_info_objects,
+                                         decoder_p,
+                                         wire_type);
             break;
 
         default:
@@ -199,22 +211,22 @@ void jv_object_rep_data_decode_inner(
         }
     }
 
-    jv_object_xy_coord_data_decode_repeated_inner(
+    jv_object_coord_data_decode_repeated_inner(
         decoder_p,
-        &repeated_info_object_coordinates,
-        &self_p->object_coordinates);
+        &repeated_info_objects,
+        &self_p->objects);
 }
 
-int jv_object_rep_data_object_coordinates_alloc(
+int jv_object_rep_data_objects_alloc(
     struct jv_object_rep_data_t *self_p,
     int length)
 {
     return (pbtools_alloc_repeated(
-                (struct pbtools_repeated_message_t *)&self_p->object_coordinates,
+                (struct pbtools_repeated_message_t *)&self_p->objects,
                 length,
                 self_p->base.heap_p,
-                sizeof(struct jv_object_xy_coord_data_t),
-                (pbtools_message_init_t)jv_object_xy_coord_data_init));
+                sizeof(struct jv_object_coord_data_t),
+                (pbtools_message_init_t)jv_object_coord_data_init));
 }
 
 void jv_object_rep_data_encode_repeated_inner(

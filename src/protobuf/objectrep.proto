@@ -2,14 +2,16 @@ syntax = "proto3";
 
 package jv;
 
-message ObjectXYCoordData {
-    int32 object_id = 1;
+message ObjectCoordData {
+    int32 id = 1;
     int32 label = 2;
-    float x = 3;
-    float y = 4;
+    float x_2d = 3;
+    float y_2d = 4;
+    float depth = 5;
 }
 
 message ObjectRepData {
-    repeated ObjectXYCoordData object_coordinates = 1;
-    bytes mask = 2;
+    int32 frame_number = 1;
+    float timestamp_ms = 2;
+    repeated ObjectCoordData objects = 3;
 }

@@ -14,15 +14,15 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fobjectrep.proto\x12\x02jv\"K\n\x11ObjectXYCoordData\x12\x11\n\tobject_id\x18\x01 \x01(\x05\x12\r\n\x05label\x18\x02 \x01(\x05\x12\t\n\x01x\x18\x03 \x01(\x02\x12\t\n\x01y\x18\x04 \x01(\x02\"P\n\rObjectRepData\x12\x31\n\x12object_coordinates\x18\x01 \x03(\x0b\x32\x15.jv.ObjectXYCoordData\x12\x0c\n\x04mask\x18\x02 \x01(\x0c\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fobjectrep.proto\x12\x02jv\"W\n\x0fObjectCoordData\x12\n\n\x02id\x18\x01 \x01(\x05\x12\r\n\x05label\x18\x02 \x01(\x05\x12\x0c\n\x04x_2d\x18\x03 \x01(\x02\x12\x0c\n\x04y_2d\x18\x04 \x01(\x02\x12\r\n\x05\x64\x65pth\x18\x05 \x01(\x02\"a\n\rObjectRepData\x12\x14\n\x0c\x66rame_number\x18\x01 \x01(\x05\x12\x14\n\x0ctimestamp_ms\x18\x02 \x01(\x02\x12$\n\x07objects\x18\x03 \x03(\x0b\x32\x13.jv.ObjectCoordDatab\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'objectrep_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_OBJECTXYCOORDDATA']._serialized_start=23
-  _globals['_OBJECTXYCOORDDATA']._serialized_end=98
-  _globals['_OBJECTREPDATA']._serialized_start=100
-  _globals['_OBJECTREPDATA']._serialized_end=180
+  _globals['_OBJECTCOORDDATA']._serialized_start=23
+  _globals['_OBJECTCOORDDATA']._serialized_end=110
+  _globals['_OBJECTREPDATA']._serialized_start=112
+  _globals['_OBJECTREPDATA']._serialized_end=209
 # @@protoc_insertion_point(module_scope)

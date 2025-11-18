@@ -12,33 +12,33 @@ import torch
 
 
 @dataclass
-class ObjectXYCoordData:
-    x: float
-    y: float
-    object_id: int = -1
-    label: int = -1
+class ObjectCoordData:
+    id: int
+    label: int
+    x_2d: float  # Normalized [0, 1]
+    y_2d: float  # Normalized [0, 1]
+    depth: float  # Depth in meters
 
 
 @dataclass
 class ObjectRepData:
-    object_coordinates: list[ObjectXYCoordData]
-    mask: torch.Tensor
+    frame_number: int
+    timestamp_ms: float
+    objects: list[ObjectCoordData]
 
     def to_dict(self):
-        """
-        Converts the ObjectRepData instance to a python dictionary.
-        """
         return {
-            "object_coordinates": [
+            "frame_number": self.frame_number,
+            "timestamp_ms": self.timestamp_ms,
+            "objects": [
                 {
-                    "object_id": coord.object_id,
-                    "label": coord.label,
-                    "x": coord.x,
-                    "y": coord.y,
+                    "id": obj.id,
+                    "x_2d": obj.x_2d,
+                    "y_2d": obj.y_2d,
+                    "depth": obj.depth,
                 }
-                for coord in self.object_coordinates
+                for obj in self.objects
             ],
-            "mask": self.mask.tolist(),
         }
 
     def to_protobuf(self, proto_cls):

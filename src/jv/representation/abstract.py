@@ -9,7 +9,7 @@ Description: This file defines the AbstractModelClass, an abstract base class fo
 
 from abc import ABC, abstractmethod
 import torch
-from .data import ObjectRepData
+from .data import ObjectCoordData
 from .exceptions import InvalidTorchDeviceException
 
 
@@ -37,7 +37,7 @@ class AbstractModelClass(ABC):
                 raise InvalidTorchDeviceException(device)
 
     @abstractmethod
-    def run(self, input) -> ObjectRepData:
+    def run(self, input) -> list[ObjectCoordData]:
         pass
 
     @abstractmethod

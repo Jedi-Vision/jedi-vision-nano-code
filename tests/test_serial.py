@@ -1,20 +1,21 @@
 from jv.serial import serialize_dataclass
-from jv.representation.data import ObjectRepData, ObjectXYCoordData
-import torch
+from jv.representation.data import ObjectRepData, ObjectCoordData
 
 
 # Add your test functions below
 def test_serialize_dataclass():
     x = ObjectRepData(
-        object_coordinates=[
-            ObjectXYCoordData(
-                object_id=1,
-                label="car",
-                x=1,
-                y=1
+        timestamp_ms=-1,
+        frame_number=-1,
+        objects=[
+            ObjectCoordData(
+                id=1,
+                label=1,
+                x_2d=1,
+                y_2d=1,
+                depth=0
             )
         ],
-        mask=torch.ones((512, 512))
     )
     ser_x = serialize_dataclass(x)
 

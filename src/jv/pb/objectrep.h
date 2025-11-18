@@ -38,19 +38,20 @@ extern "C" {
 #include "pbtools.h"
 
 /**
- * Message jv.ObjectXYCoordData.
+ * Message jv.ObjectCoordData.
  */
-struct jv_object_xy_coord_data_repeated_t {
+struct jv_object_coord_data_repeated_t {
     int length;
-    struct jv_object_xy_coord_data_t *items_p;
+    struct jv_object_coord_data_t *items_p;
 };
 
-struct jv_object_xy_coord_data_t {
+struct jv_object_coord_data_t {
     struct pbtools_message_base_t base;
-    int32_t object_id;
+    int32_t id;
     int32_t label;
-    float x;
-    float y;
+    float x_2d;
+    float y_2d;
+    float depth;
 };
 
 /**
@@ -63,29 +64,30 @@ struct jv_object_rep_data_repeated_t {
 
 struct jv_object_rep_data_t {
     struct pbtools_message_base_t base;
-    struct jv_object_xy_coord_data_repeated_t object_coordinates;
-    struct pbtools_bytes_t mask;
+    int32_t frame_number;
+    float timestamp_ms;
+    struct jv_object_coord_data_repeated_t objects;
 };
 
 /**
- * Encoding and decoding of jv.ObjectXYCoordData.
+ * Encoding and decoding of jv.ObjectCoordData.
  */
-struct jv_object_xy_coord_data_t *
-jv_object_xy_coord_data_new(
+struct jv_object_coord_data_t *
+jv_object_coord_data_new(
     void *workspace_p,
     size_t size);
 
-int jv_object_xy_coord_data_encode(
-    struct jv_object_xy_coord_data_t *self_p,
+int jv_object_coord_data_encode(
+    struct jv_object_coord_data_t *self_p,
     uint8_t *encoded_p,
     size_t size);
 
-int jv_object_xy_coord_data_decode(
-    struct jv_object_xy_coord_data_t *self_p,
+int jv_object_coord_data_decode(
+    struct jv_object_coord_data_t *self_p,
     const uint8_t *encoded_p,
     size_t size);
 
-int jv_object_rep_data_object_coordinates_alloc(
+int jv_object_rep_data_objects_alloc(
     struct jv_object_rep_data_t *self_p,
     int length);
 
@@ -109,27 +111,27 @@ int jv_object_rep_data_decode(
 
 /* Internal functions. Do not use! */
 
-void jv_object_xy_coord_data_init(
-    struct jv_object_xy_coord_data_t *self_p,
+void jv_object_coord_data_init(
+    struct jv_object_coord_data_t *self_p,
     struct pbtools_heap_t *heap_p);
 
-void jv_object_xy_coord_data_encode_inner(
+void jv_object_coord_data_encode_inner(
     struct pbtools_encoder_t *encoder_p,
-    struct jv_object_xy_coord_data_t *self_p);
+    struct jv_object_coord_data_t *self_p);
 
-void jv_object_xy_coord_data_decode_inner(
+void jv_object_coord_data_decode_inner(
     struct pbtools_decoder_t *decoder_p,
-    struct jv_object_xy_coord_data_t *self_p);
+    struct jv_object_coord_data_t *self_p);
 
-void jv_object_xy_coord_data_encode_repeated_inner(
+void jv_object_coord_data_encode_repeated_inner(
     struct pbtools_encoder_t *encoder_p,
     int field_number,
-    struct jv_object_xy_coord_data_repeated_t *repeated_p);
+    struct jv_object_coord_data_repeated_t *repeated_p);
 
-void jv_object_xy_coord_data_decode_repeated_inner(
+void jv_object_coord_data_decode_repeated_inner(
     struct pbtools_decoder_t *decoder_p,
     struct pbtools_repeated_info_t *repeated_info_p,
-    struct jv_object_xy_coord_data_repeated_t *repeated_p);
+    struct jv_object_coord_data_repeated_t *repeated_p);
 
 void jv_object_rep_data_init(
     struct jv_object_rep_data_t *self_p,

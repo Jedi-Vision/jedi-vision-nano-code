@@ -11,7 +11,7 @@ import torch
 import torch.nn.functional as F
 
 # Local imports
-from .data import ObjectRepData, ObjectXYCoordData
+from .data import ObjectCoordData
 from .ade_utils import ade_palette, ADE_ID_TO_LABEL
 from .abstract import AbstractModelClass
 
@@ -91,7 +91,7 @@ class SegFormerEnvironmentRepresentationModel(AbstractModelClass):
 
         return model
 
-    def run(self, input: torch.Tensor, **kwargs) -> ObjectRepData:
+    def run(self, input: torch.Tensor, **kwargs) -> list[ObjectCoordData]:
         batch_feature = self.preprocess(input, **kwargs)
         output = self.process(batch_feature, **kwargs)
         return self.postprocess(output, input=input, **kwargs)
@@ -110,7 +110,7 @@ class SegFormerEnvironmentRepresentationModel(AbstractModelClass):
         epsilon: float = 0.5,
         include: list = [12, 20],  # person and car only
         **kwargs
-    ) -> ObjectRepData:
+    ) -> list[ObjectCoordData]:
 
         logits = out.logits
 
@@ -149,7 +149,7 @@ class SegFormerEnvironmentRepresentationModel(AbstractModelClass):
         blocked_mask = mode_pool2d(mask, kernel_size=self.k, stride=self.k)
         mask[include_mask] = 1
 
-        object_coordinates = []
+        objects = []
 
         (height, width) = blocked_mask.shape
 
@@ -160,11 +160,13 @@ class SegFormerEnvironmentRepresentationModel(AbstractModelClass):
                     x = self.k*w - 1
                     y = self.k*h - 1
                     # label = ADE_ID_TO_LABEL[str(int(blocked_mask[h-1][w-1].item()))]
-                    object_coordinates.append(
-                        ObjectXYCoordData(
+                    objects.append(
+                        ObjectCoordData(
+                            id=-1,
                             label=int(blocked_mask[h-1][w-1].item()),
-                            x=x,
-                            y=y
+                            x_2d=x,
+                            y_2d=y,
+                            depth=0
                         )
                     )
                     # # Add a star or object onto the mask at (x, y)
@@ -189,7 +191,7 @@ class SegFormerEnvironmentRepresentationModel(AbstractModelClass):
                     #     lineType=cv2.LINE_AA
                     # )
 
-        return ObjectRepData(object_coordinates=object_coordinates, mask=mask)
+        return objects
 
     def postprocess_to_image(
         self,
@@ -264,7 +266,7 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
     def _setup_model(self, yolo_model_name) -> YOLO:
         return YOLO(YOLO_MODEL_ZOO[yolo_model_name])
 
-    def run(self, input, **kwargs) -> ObjectRepData:
+    def run(self, input, **kwargs) -> list[ObjectCoordData]:
         out = self.process(input, **kwargs)
         return self.postprocess(out, input=input, **kwargs)
 
@@ -274,15 +276,13 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
     def process(self, input, **kwargs) -> Results:
         return self.model.track(input, persist=True, device=self.device)[0]
 
-    def postprocess(self, out: Results, **kwargs) -> ObjectRepData:
+    def postprocess(self, out: Results, **kwargs) -> list[ObjectCoordData]:
 
         input: torch.Tensor | None = kwargs.get("input", None)
         show_det: bool = kwargs.get("show_det", False)
 
         if input is None:
             raise Exception("Fatal error on model run, no input frame provided.")
-
-        mask = torch.zeros((input.shape[0], input.shape[1]), dtype=torch.uint8)
 
         if out.boxes and out.boxes.is_track:
 
@@ -293,7 +293,7 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     pass
 
-            object_coordinates = []
+            objects = []
             boxes = out.boxes.xywh.cpu() if out.boxes.xywh is torch.Tensor else out.boxes.xywh
             object_ids = out.boxes.id.int().cpu().tolist() if isinstance(out.boxes.id, torch.Tensor) else \
                 (out.boxes.id.astype(int).tolist() if isinstance(out.boxes.id, np.ndarray) else None)
@@ -311,20 +311,19 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
                 if len(track) > self.retain_frames:  # retain track for only 30 frames
                     track.pop(0)
 
-                object_coordinates.append(
-                    ObjectXYCoordData(
-                        object_id=object_id,
+                objects.append(
+                    ObjectCoordData(
+                        id=object_id,
                         label=label_id,
-                        x=float(x),
-                        y=float(y)
+                        x_2d=float(x),
+                        y_2d=float(y),
+                        depth=-1
                     )
                 )
 
-                mask[int(y)][int(x)] = 1  # add pixel to mask
+            return objects
 
-            return ObjectRepData(object_coordinates, mask=mask)
-
-        return ObjectRepData([], mask=mask)
+        return []
 
     def postprocess_to_image(
         self,
@@ -356,4 +355,4 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
                 cv2.polylines(frame, [points], isClosed=False, color=(230, 230, 230), thickness=10)
             return frame
         else:
-            raise Exception("Error on inference")
+            raise Exception("Error on inference.")

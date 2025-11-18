@@ -17,7 +17,8 @@ class FrameBuffer:
         """
         A one-way frame buffer for reading from a Camera stream using cv2.
 
-        Automatically starts capturing on instantiation.
+        Automatically starts capturing on instantiation. Stores a frame with it's
+        video timestamp in ms (calculated according to FPS), and frame number.
 
         Args:
             size (int, optional): Maximum number of frames to store in the queue.
@@ -59,13 +60,14 @@ class FrameBuffer:
         while self.running:
             ret, frame = self.capture.read()
             self.frame_count += 1
+            self.timestamp_ms = self.frame_count * 1000 / self.frame_rate
 
             # Warmup
             if self.frame_count < self.warmup_frames:
                 continue
 
             # Skip frame
-            if self.frame_count % self.frame_skip != 0:
+            if self.frame_skip != 0 and self.frame_count % self.frame_skip != 0:
                 continue
 
             # Ensure that throughput does not exceed video framerate
@@ -75,13 +77,14 @@ class FrameBuffer:
                 break
             if self.q.full():
                 self.q.get(timeout=0.001)  # Remove the oldest frame to make space
-            self.q.put(frame, timeout=0.001)
+            self.q.put((frame, self.frame_count, self.timestamp_ms), timeout=0.001)
 
     def get(self):
         """
         Retrieves the next frame from the queue.
 
-        :return: The next frame, or None if the queue is empty.
+        :return: The next frame, along with timestamp info and frame number,
+                 or None if the queue is empty.
         """
         try:
             frame = self.q.get(timeout=0.001)
