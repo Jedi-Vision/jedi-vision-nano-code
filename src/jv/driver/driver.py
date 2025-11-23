@@ -6,6 +6,19 @@ from jv.representation.data import ObjectRepData
 from typing import Literal
 import torch
 import cv2
+import time
+from functools import wraps
+
+
+def timeit(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        result = func(*args, **kwargs)
+        end = time.time()
+        print(f"{func.__name__} executed in {(end - start) * 1000:.4f} ms")
+        return result
+    return wrapper
 
 
 class Driver:
@@ -81,6 +94,7 @@ class Driver:
         self.device = device
         self.show_det = show_det
 
+    @timeit
     def model_run(self, frame, frame_number, timestamp_ms):
 
         objects = self.env_model.run(frame, show_det=self.show_det)
