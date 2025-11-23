@@ -274,7 +274,7 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
         pass
 
     def process(self, input, **kwargs) -> Results:
-        return self.model.track(input, persist=True, device=self.device)[0]
+        return self.model.track(input, persist=True, device=self.device, tracker="bytetrack.yaml")[0]
 
     def postprocess(self, out: Results, **kwargs) -> list[ObjectCoordData]:
 
@@ -284,14 +284,14 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
         if input is None:
             raise Exception("Fatal error on model run, no input frame provided.")
 
-        if out.boxes and out.boxes.is_track:
+        if show_det:
+            frame = out.plot()
+            cv2.imshow("track", frame)
+            # Break the loop if 'q' is pressed
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                pass
 
-            if show_det:
-                frame = out.plot()
-                cv2.imshow("track", frame)
-                # Break the loop if 'q' is pressed
-                if cv2.waitKey(1) & 0xFF == ord("q"):
-                    pass
+        if out.boxes and out.boxes.is_track:
 
             objects = []
             boxes = out.boxes.xywh.cpu() if out.boxes.xywh is torch.Tensor else out.boxes.xywh
@@ -355,4 +355,4 @@ class YoloEnvironmentRepresentationModel(AbstractModelClass):
                 cv2.polylines(frame, [points], isClosed=False, color=(230, 230, 230), thickness=10)
             return frame
         else:
-            raise Exception("Error on inference.")
+            return out.plot()  # just frame with no boxes
