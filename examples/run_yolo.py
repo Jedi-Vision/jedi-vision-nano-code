@@ -62,7 +62,7 @@ while True:
 
     if frame_count % 30 == 0:
         print(
-            f"Frame {frame_count}/{total_frames}\n"
+            f"\n\nFrame {frame_count}/{total_frames}\n"
             f"Inference: {inference_time*1000:.4f}ms\n"
             f"Postprocess: {postproc_time*1000:.4f}ms\n"
             f"Total: {(inference_time + postproc_time)*1000:.4f}ms\n"
