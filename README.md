@@ -135,15 +135,16 @@ POETRY_VIRTUALENVS_CREATE=false poetry install
 
 ### Usage
 
-Run the container and link the existing repository to a volume inside the container.
-```bash
-jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv jv-pytorch-container
-```
-
-The command `-v ./jedi-vision-nano-code:/workspace/jv` links the repository folder to a folder `workspace/jv`
-
-or use the provided `start_container.sh`
+Use the provided `start_container.sh`
 
 ```bash
 bash start_container.sh
 ```
+
+Or run the container directly with `jetson-containers` and link the existing repository to a volume inside the container.
+```bash
+cd ../  # navigate to outside of repo folder
+jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv jv-pytorch-container
+```
+
+The command `-v ./jedi-vision-nano-code:/workspace/jv` links the repository folder `jedi-vision-nano-code` to a folder `workspace/jv`
