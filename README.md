@@ -12,6 +12,8 @@
 
 ## Installation
 
+This installation assumes that you have a Python version between `3.11` and `3.14` installed on your computer.
+
 1. First off, make you have [Poetry](https://python-poetry.org/docs/) installed.
 
 2. Then clone the repository.
@@ -28,16 +30,17 @@
     
     Also make sure to initialize the submodules,
     ```bash
+    cd jedi-vision-nano-code
     git submodule update --init --recursive
     ```
+
+    **If running via a docker container please look at the [next section](#nvidia-jetson-orin-nano--docker-container-usage-instructions) for further installation instructions.**
 
 3. (Optional) If you'd like poetry to automatically create a virtual environment *in the project* run the following.
 
     ```bash
     poetry config virtualenvs.in-project true
     ```
-
-    Doing this means that the virtual environment won't get installed to a random location, which can make it easier for IDE's like VSCode to find the environment.
 
 4. Navigate to the project folder and install the dependencies
 
@@ -63,3 +66,50 @@
     ```bash
     pip install -e .
     ```
+
+## NVIDIA Jetson Orin Nano / Docker Container Usage Instructions
+
+To use this software package on a Jetson Orin Nano, we utilized the [jetson-containers](https://github.com/dusty-nv/jetson-containers) library from Dustin Franklin.
+
+We have included a fork of the repository with a Jedi-Vision specific PyTorch container which includes all the needed dependencies and Poetry setup.
+
+### Installation
+
+To install on a Jetson Orin Nano with Jetpack 6.2 (nvidia-l4t-core 36.4.7) with Docker container run the following:
+
+```bash
+# navigate to repo
+cd jedi-vision-nano-code
+
+# install the container tools
+bash src/jetson-containers/install.sh
+
+# Build the PyTorch container with specific CUDA version (12.6)
+CUDA_VERSION=12.6 jetson-containers build --name v-pytorch-container pytorch
+```
+
+Then install all the dependencies:
+
+```bash
+# Start docker container
+bash start_container.sh
+
+# Install dependencies
+cd workspace/jv
+POETRY_VIRTUALENVS_CREATE=false poetry install
+```
+
+### Usage
+
+Run the container and link the existing repository to a volume inside the container.
+```bash
+jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv jv-pytorch-container
+```
+
+The command `-v ./jedi-vision-nano-code:/workspace/jv` links the repository folder to a folder `workspace/jv`
+
+or use the provided `start_container.sh`
+
+```bash
+bash start_container.sh
+```

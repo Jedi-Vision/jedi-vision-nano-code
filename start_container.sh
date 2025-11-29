@@ -1,0 +1,1 @@
+jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv jv-pytorch-container

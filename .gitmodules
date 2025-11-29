@@ -4,3 +4,6 @@
 [submodule "src/spatial-audio"]
 	path = src/spatial-audio
 	url = https://github.com/Jedi-Vision/spatial-audio.git
+[submodule "src/jetson-containers"]
+	path = src/jetson-containers
+	url = https://github.com/colinpannikkat/jetson-containers.git
