@@ -1,4 +1,4 @@
-from jv.representation import YoloEnvironmentRepresentationModel
+from jv.representation import YoloObjectRepresentationModel
 import cv2
 from argparse import ArgumentParser
 import os
@@ -28,7 +28,7 @@ if (
     )
     exit(1)
 
-model = YoloEnvironmentRepresentationModel("yolo11", device=args.device)
+model = YoloObjectRepresentationModel("yolo11", device=args.device)
 
 if args.webcam:
     cap = cv2.VideoCapture(0)  # run with webcam
@@ -63,10 +63,10 @@ while True:
     print(f"Inference took {end*1000:.4f}ms")
 
     # Iterate over detected objects
-    for obj in out.object_coordinates:
-        x, y = obj.x, obj.y
-        label = obj.label if obj.label else ""
-        object_id = obj.object_id if obj.object_id else 0
+    for obj in out:
+        x, y = obj.x_2d, obj.y_2d
+        label = obj.label
+        object_id = obj.id
 
         # Draw points on an image same size as input.shape
         cv2.circle(

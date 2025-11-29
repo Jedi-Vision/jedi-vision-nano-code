@@ -1,4 +1,4 @@
-from jv.representation import SegFormerEnvironmentRepresentationModel
+from jv.representation import SegFormerObjectRepresentationModel
 import cv2
 import torch
 from argparse import ArgumentParser
@@ -29,7 +29,7 @@ if (
     )
     exit(1)
 
-model = SegFormerEnvironmentRepresentationModel("ade-b0", k=32, device=args.device)
+model = SegFormerObjectRepresentationModel("ade-b0", k=32, device=args.device)
 
 if args.webcam:
     cap = cv2.VideoCapture(0)  # run with webcam
@@ -59,15 +59,14 @@ while True:
 
     # Run model and add mask to image
     start = time.time()
-    out = model.run(torch.tensor(frame), epsilon=0.5)
+    inputs = model.preprocess(torch.tensor(frame), epsilon=0.5)
+    out = model.process(inputs)
+    mask = model.postprocess_to_image(out, frame)
     end = time.time() - start
     print(f"Inference took {end*1000:.4f}ms")
-    masked = out.mask.unsqueeze(dim=2).to(torch.uint8).numpy() * 255
-    masked = cv2.cvtColor(masked, cv2.COLOR_GRAY2BGR)
-    mixed = cv2.addWeighted(frame, 1, masked, 0.6, 0)
 
     # Display the result
-    cv2.imshow("Segmentation", mixed)
+    cv2.imshow("Segmentation", mask)
 
     # Exit on 'q' key press
     if cv2.waitKey(1) & 0xFF == ord('q'):

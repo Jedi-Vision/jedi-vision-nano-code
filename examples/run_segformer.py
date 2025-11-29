@@ -1,4 +1,4 @@
-from jv.representation import SegFormerEnvironmentRepresentationModel
+from jv.representation import SegFormerObjectRepresentationModel
 import cv2
 import time
 import torch
@@ -25,7 +25,7 @@ if args.video == "./videos/sidewalk_pov.mp4" and not (os.path.exists(args.video)
     )
     exit(1)
 
-model = SegFormerEnvironmentRepresentationModel("ade-b0", k=1, device=args.device)
+model = SegFormerObjectRepresentationModel("ade-b0", k=1, device=args.device)
 
 if args.webcam:
     cap = cv2.VideoCapture(0)  # run with webcam

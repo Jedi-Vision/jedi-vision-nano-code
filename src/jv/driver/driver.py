@@ -1,5 +1,5 @@
 from jv.audio import ObjectBuffer
-from jv.representation import YoloEnvironmentRepresentationModel
+from jv.representation import YoloObjectRepresentationModel
 from jv.scene.video_depth_anything_code.video_depth_stream import VideoDepthAnything, MODEL_CONFIGS
 from jv.camera import FrameBuffer
 from jv.representation.data import ObjectRepData
@@ -70,7 +70,7 @@ class Driver:
             frame_rate=frame_rate
         )
 
-        self.env_model = YoloEnvironmentRepresentationModel(
+        self.env_model = YoloObjectRepresentationModel(
             model_name=object_model_name,
             device=device,
             retain_frames=retain_frames,

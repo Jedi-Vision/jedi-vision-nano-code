@@ -1,9 +1,9 @@
 """
-File: environment.py
+File: object.py
 Author: Colin Pannikkat
 Date: Fall 2025
-Description: This file contains the implementation of the SegFormerEnvironmentRepresentationModelClass,
-             which is a model class for environment representation using SegFormer.
+Description: This file contains the implementation of the ObjectRepresentationModel classes,
+             which are model classes for object representation using SegFormer and YOLO.
 """
 
 # PyTorch stuff
@@ -78,7 +78,7 @@ def mode_pool2d(mask, kernel_size, stride):
     return mode_vals.view(H_out, W_out)
 
 
-class SegFormerEnvironmentRepresentationModel(AbstractModelClass):
+class SegFormerObjectRepresentationModel(AbstractModelClass):
     def __init__(self, seg_model_name: str, k: int, device: str):
         super().__init__(self._setup_model(seg_model_name), device)
         self.model.to(self.device)
@@ -253,7 +253,7 @@ class SegFormerEnvironmentRepresentationModel(AbstractModelClass):
         return masked
 
 
-class YoloEnvironmentRepresentationModel(AbstractModelClass):
+class YoloObjectRepresentationModel(AbstractModelClass):
 
     def __init__(self, model_name: str, device: str, retain_frames: int = 30):
 

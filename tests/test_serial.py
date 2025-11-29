@@ -2,7 +2,6 @@ from jv.serial import serialize_dataclass
 from jv.representation.data import ObjectRepData, ObjectCoordData
 
 
-# Add your test functions below
 def test_serialize_dataclass():
     x = ObjectRepData(
         timestamp_ms=-1,

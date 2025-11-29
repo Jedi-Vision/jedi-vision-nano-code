@@ -1,2 +1,2 @@
 from .data import ObjectRepData, ObjectCoordData
-from .environment import SegFormerEnvironmentRepresentationModel, YoloEnvironmentRepresentationModel
+from .object import SegFormerObjectRepresentationModel, YoloObjectRepresentationModel

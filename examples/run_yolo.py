@@ -1,4 +1,4 @@
-from jv.representation import YoloEnvironmentRepresentationModel
+from jv.representation import YoloObjectRepresentationModel
 import cv2
 import time
 from argparse import ArgumentParser
@@ -24,7 +24,7 @@ if args.video == "./videos/sidewalk_pov.mp4" and not (os.path.exists(args.video)
     )
     exit(1)
 
-model = YoloEnvironmentRepresentationModel("yolo11", device=args.device)
+model = YoloObjectRepresentationModel("yolo11", device=args.device)
 
 if args.webcam:
     cap = cv2.VideoCapture(0)  # run with webcam
