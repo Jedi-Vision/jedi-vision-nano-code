@@ -339,6 +339,18 @@ docs = ["ipython", "matplotlib", "numpydoc", "sphinx"]
 tests = ["pytest", "pytest-cov", "pytest-xdist"]
 
 [[package]]
+name = "easydict"
+version = "1.13"
+description = "Access dict values as attributes (works recursively)."
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "easydict-1.13-py3-none-any.whl", hash = "sha256:6b787daf4dcaf6377b4ad9403a5cee5a86adbc0ca9a5bcf5410e9902002aeac2"},
+    {file = "easydict-1.13.tar.gz", hash = "sha256:b1135dedbc41c8010e2bc1f77ec9744c7faa42bce1a1c87416791449d6c87780"},
+]
+
+[[package]]
 name = "einops"
 version = "0.8.1"
 description = "A new flavour of deep learning operations"
@@ -2613,4 +2625,4 @@ zstd = ["zstandard (>=0.18.0)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <3.14"
-content-hash = "0c70b08a67b712a27273f1591a4790e8ae2a2bd2450233f24d634cd5febe6d4c"
+content-hash = "293c3a0d29ac688dca27ccb979088a5973bddbe0bc81c4457498649907641482"
