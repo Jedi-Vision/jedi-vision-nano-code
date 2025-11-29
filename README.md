@@ -85,7 +85,7 @@ cd jedi-vision-nano-code
 bash src/jetson-containers/install.sh
 
 # Build the PyTorch container with specific CUDA version (12.6)
-CUDA_VERSION=12.6 jetson-containers build --name v-pytorch-container pytorch
+CUDA_VERSION=12.6 jetson-containers build --name jv-pytorch-container pytorch
 ```
 
 Then install all the dependencies:
