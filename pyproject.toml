@@ -22,6 +22,7 @@ dependencies = [
     "pbtools (>=0.47.0,<0.48.0)",
     "lap (>=0.5.12,<0.6.0)",
     "imageio (>=2.37.2,<3.0.0)",
+    "einops (>=0.8.1,<0.9.0)",
 ]
 
 [build-system]
