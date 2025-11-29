@@ -83,7 +83,41 @@ cd jedi-vision-nano-code
 
 # install the container tools
 bash src/jetson-containers/install.sh
+```
 
+#### Docker Default Runtime
+
+If you're going to be building containers, you need to set Docker's `default-runtime` to `nvidia`, so that the NVCC compiler and GPU are available during `docker build` operations.  Add `"default-runtime": "nvidia"` to your `/etc/docker/daemon.json` configuration file before attempting to build the containers:
+
+``` json
+{
+    "runtimes": {
+        "nvidia": {
+            "path": "nvidia-container-runtime",
+            "runtimeArgs": []
+        }
+    },
+
+    "default-runtime": "nvidia"
+}
+```
+
+Then restart the Docker service, or reboot your system before proceeding:
+
+```bash
+$ sudo systemctl restart docker
+```
+
+You can then confirm the changes by looking under `docker info`
+
+```bash
+$ sudo docker info | grep 'Default Runtime'
+Default Runtime: nvidia
+```
+
+#### Build Container
+
+```bash
 # Build the PyTorch container with specific CUDA version (12.6)
 CUDA_VERSION=12.6 jetson-containers build --name jv-pytorch-container pytorch
 ```
