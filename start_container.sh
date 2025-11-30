@@ -1,1 +1,1 @@
-jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv jv-pytorch-container
+jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv jv-pytorch-container:r36.4.tegra-aarch64-cu126-22.04-python
