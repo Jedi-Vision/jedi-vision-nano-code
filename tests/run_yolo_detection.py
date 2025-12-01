@@ -1,4 +1,5 @@
 from jv.representation import YoloObjectRepresentationModel
+from jv.representation.yolo_utils import YOLO_ID_TO_LABEL
 import cv2
 from argparse import ArgumentParser
 import os
@@ -63,7 +64,7 @@ while True:
     # Iterate over detected objects
     for obj in out:
         x, y = obj.x_2d, obj.y_2d
-        label = obj.label
+        label_id = obj.label
         object_id = obj.id
 
         # Draw points on an image same size as input.shape
@@ -78,7 +79,7 @@ while True:
         # Add text for label and object id
         cv2.putText(
             img=frame,
-            text=f"{label}:{object_id}",
+            text=f"{YOLO_ID_TO_LABEL[label_id]}:{object_id}",
             org=(int(x) + 10, int(y) - 10),
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.5,
