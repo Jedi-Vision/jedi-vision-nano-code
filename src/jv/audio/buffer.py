@@ -97,9 +97,6 @@ class ObjectBuffer:
         while self.running:
 
             try:
-                if self.q.full():
-                    self.q.get()  # Remove the oldest frame to make space
-
                 message = self.q.get(timeout=0.001)
 
                 if self.output_to == "socket":
