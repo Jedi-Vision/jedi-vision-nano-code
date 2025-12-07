@@ -19,7 +19,8 @@ class ObjectBuffer:
         self,
         size: int = 0,
         addr: str = "/tmp/jv/audio/0.sock",
-        output_to: Literal["socket", "file", "none"] = "socket"
+        output_to: Literal["socket", "file", "none"] = "socket",
+        serial_type: Literal["struct", "protobuf"] = "struct"
     ):
         """
         Initializes the buffer with a queue, a ZeroMQ context, and starts a client connection.
@@ -34,6 +35,7 @@ class ObjectBuffer:
         self.ctx = zmq.Context()
         self.addr = addr
         self.thread = None
+        self.serial_type: Literal["struct", "protobuf"] = serial_type
 
         self.output_to = output_to
         if self.output_to == "file":
@@ -101,7 +103,7 @@ class ObjectBuffer:
 
                 if self.output_to == "socket":
 
-                    serialized_message = self._serialize_message(message)
+                    serialized_message = self._serialize_message(message, type=self.serial_type)
 
                     # print("Sending message.")
                     self.socket.send(serialized_message)

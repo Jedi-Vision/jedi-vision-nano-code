@@ -27,6 +27,7 @@ class Driver:
         self,
         device: Literal["cpu", "mps", "cuda"],
         output_to: Literal["socket", "file", "none"] = "socket",
+        serial_type: Literal["struct", "protobuf"] = "struct",
         object_model_name: str = "yolo11",
         vda_model_name: str = "vits",
         chkpts_folder: str = "./checkpoints",
@@ -76,7 +77,11 @@ class Driver:
             retain_frames=retain_frames,
         )
 
-        self.object_buffer = ObjectBuffer(size=object_buffer_size, output_to=output_to)
+        self.object_buffer = ObjectBuffer(
+            size=object_buffer_size,
+            output_to=output_to,
+            serial_type=serial_type
+        )
 
         self.depth = depth
         self.scene_model = VideoDepthAnything(**MODEL_CONFIGS[vda_model_name])
