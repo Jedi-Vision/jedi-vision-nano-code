@@ -79,7 +79,7 @@ class ObjectBuffer:
                 Python objects and C structs.
 
         Returns:
-            bytes | str
+            bytes
         """
 
         if type == "protobuf":
