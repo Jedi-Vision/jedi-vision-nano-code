@@ -54,6 +54,7 @@ class ObjectBuffer:
         self.running = False
         if self.thread is not None:
             self.thread.join()
+        self.socket.close()
         self.ctx.term()
 
     def put(self, message: ObjectRepData) -> None:

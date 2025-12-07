@@ -151,3 +151,21 @@ class Driver:
             frame_count += 1
             msg = self.model_run(*frame)
             self.object_buffer.put(msg)
+
+            try:
+                while True:
+                    frame = self.frame_buffer.get()
+                    if frame is None:
+                        continue
+                    frame_count += 1
+                    msg = self.model_run(*frame)
+                    self.object_buffer.put(msg)
+            except KeyboardInterrupt:
+                print("Interrupted by user (SIGINT). Exiting...")
+
+                print("Terminating frame buffer...")
+                self.frame_buffer.stop()
+                print("Terminating object buffer...")
+                self.object_buffer.stop()
+
+                exit(0)
