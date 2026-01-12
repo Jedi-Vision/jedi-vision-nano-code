@@ -86,27 +86,14 @@ int main(int argc, char const *argv[])
 
         printf("Parsed %d coords:\n", rep.num_coords);
         for (int i = 0; i < rep.num_coords; ++i) {
-            ObjectXYCoordData *c = &rep.coords[i];
+            ObjectCoordData *c = &rep.objects[i];
 
             // Get the 1D indexing based on 2D shape of data
-            int width = rep.shape ? rep.shape[1] : 1;
-            int idx = (int)c->y * width + (int)c->x;
-            printf("  [%d] x=%f y=%f z=%f id=%d label='%d'\n", i, c->x, c->y, ((float*)rep.data)[idx], c->object_id, c->label);
-        }
-
-        if (rep.dtype) {
-            printf("Mask: dtype=%s ndim=%d bytes=%zu\n", rep.dtype, rep.ndim, rep.data_bytes);
-            if (rep.data && strcmp(rep.dtype, "float32") == 0 && rep.data_bytes >= 4) {
-                float v;
-                memcpy(&v, rep.data, sizeof(float));
-                printf("  first element (float32) = %f\n", v);
-            }
+            printf("  [%d] x=%f y=%f z=%f id=%d label='%d'\n", i, c->x_2d, c->y_2d, c->depth, c->id, c->label);
         }
 
         // free
-        free(rep.coords);
-        free(rep.shape);
-        free(rep.data);
+        free(rep.objects);
 
         zstr_send(responder, "0");
         zstr_free(&buffer);

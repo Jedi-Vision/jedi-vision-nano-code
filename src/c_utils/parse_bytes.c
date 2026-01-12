@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include "parse_bytes.h"
+#include "object.h"
 
 // Utility: check if a byte is a control marker
 static int is_control(uint8_t c) {
@@ -53,7 +53,14 @@ int parse_object_rep(const uint8_t *buf, size_t len, ObjectRepData *out) {
 
     if (i >= len) return -1;
 
-    // Expect list start for object_coordinates
+    // Consume frame number and timestamp
+    int32_t frame_number = read_int32_le(&buf[i]); i += 4;
+    double timestamp_ms = read_double_le(&buf[i]); i += 8;
+
+    out->frame_number = frame_number;
+    out->timestamp_ms = timestamp_ms;
+
+    // Expect list for object_coordinates
     if (buf[i] != '^') {
         fprintf(stderr, "Expected '^' at start of list, got '%c' (0x%02x)\n", buf[i], buf[i]);
         return -1;
@@ -64,8 +71,8 @@ int parse_object_rep(const uint8_t *buf, size_t len, ObjectRepData *out) {
     int32_t count = read_int32_le(&buf[i]);
     i += 4;
     out->num_coords = count;
-    out->coords = calloc((size_t)count, sizeof(ObjectXYCoordData));
-    if (!out->coords && count > 0) return -1;
+    out->objects = calloc((size_t)count, sizeof(ObjectCoordData));
+    if (!out->objects && count > 0) return -1;
 
     for (int idx = 0; idx < count; ++idx) {
         if (i >= len) return -1;
@@ -75,21 +82,24 @@ int parse_object_rep(const uint8_t *buf, size_t len, ObjectRepData *out) {
         }
         i++; // consume '|'
 
-        // Read fields in dataclass order: x (double), y (double), object_id (int32), label (int32)
-        if (i + 8 > len) return -1;
-        double x = read_double_le(&buf[i]); i += 8;
-        if (i + 8 > len) return -1;
-        double y = read_double_le(&buf[i]); i += 8;
+        // Read fields in dataclass order (see object.h)
         if (i + 4 > len) return -1;
-        int32_t object_id = read_int32_le(&buf[i]); i += 4;
+        int32_t id = read_int32_le(&buf[i]); i += 4;
         if (i + 4 > len) return -1;
         int32_t label = read_int32_le(&buf[i]); i += 4;
-
-        out->coords[idx].x = x;
-        out->coords[idx].y = y;
-        out->coords[idx].object_id = object_id;
-        out->coords[idx].label = label;
-
+        if (i + 8 > len) return -1;
+        double x_2d = read_double_le(&buf[i]); i += 8;
+        if (i + 8 > len) return -1;
+        double y_2d = read_double_le(&buf[i]); i += 8;
+        if (i + 8 > len) return -1;
+        double depth = read_double_le(&buf[i]); i += 8;
+        
+        out->objects[idx].id = id;
+        out->objects[idx].label = label;
+        out->objects[idx].x_2d = x_2d;
+        out->objects[idx].y_2d = y_2d;
+        out->objects[idx].depth = depth;
+        
         // After label, the next byte may be '%' (next item) or '^' (end)
         if (i < len && buf[i] == '|') {
             // continue to next item (loop will consume % at top)
@@ -107,115 +117,115 @@ int parse_object_rep(const uint8_t *buf, size_t len, ObjectRepData *out) {
         }
     }
 
-    // Next expect tensor start '$'
-    if (i >= len) return 0; // no tensor present
-    if (buf[i] != '$') {
-        // Not a tensor: done
-        return 0;
-    }
-    i++; // consume '$'
+    // // Next expect tensor start '$'
+    // if (i >= len) return 0; // no tensor present
+    // if (buf[i] != '$') {
+    //     // Not a tensor: done
+    //     return 0;
+    // }
+    // i++; // consume '$'
 
-    // Get the dtype
-    int32_t dtype_num = read_int32_le(&buf[i]);
-    i += 4; // consume the dtype number
-    char *dtype = NUM_TO_DTYPE[dtype_num];
+    // // Get the dtype
+    // int32_t dtype_num = read_int32_le(&buf[i]);
+    // i += 4; // consume the dtype number
+    // char *dtype = NUM_TO_DTYPE[dtype_num];
 
-    // Find the matching closing '$'
-    size_t payload_start = i;
-    size_t payload_end = payload_start;
-    // Find the last occurrence of '$' in buf after payload_start
-    payload_end = len;
-    for (size_t j = len; j > payload_start; --j) {
-        if (buf[j - 1] == '$') {
-            payload_end = j - 1;
-            break;
-        }
-    }
-    if (payload_end >= len) {
-        fprintf(stderr, "Unterminated tensor payload\n");
-        return -1;
-    }
+    // // Find the matching closing '$'
+    // size_t payload_start = i;
+    // size_t payload_end = payload_start;
+    // // Find the last occurrence of '$' in buf after payload_start
+    // payload_end = len;
+    // for (size_t j = len; j > payload_start; --j) {
+    //     if (buf[j - 1] == '$') {
+    //         payload_end = j - 1;
+    //         break;
+    //     }
+    // }
+    // if (payload_end >= len) {
+    //     fprintf(stderr, "Unterminated tensor payload\n");
+    //     return -1;
+    // }
 
-    // payload is buf[payload_start .. payload_end-1]
-    size_t payload_len = payload_end - payload_start;
-    const uint8_t *payload = &buf[payload_start];
+    // // payload is buf[payload_start .. payload_end-1]
+    // size_t payload_len = payload_end - payload_start;
+    // const uint8_t *payload = &buf[payload_start];
 
-    // Find the start of the ascii type by searching for '(' character
-    size_t open_paren = 0;
-    while (open_paren < payload_len && payload[open_paren] != '(') open_paren++;
-    if (open_paren >= payload_len) {
-        fprintf(stderr, "Malformed tensor header (no closing parenthesis)\n");
-        return -1;
-    }
+    // // Find the start of the ascii type by searching for '(' character
+    // size_t open_paren = 0;
+    // while (open_paren < payload_len && payload[open_paren] != '(') open_paren++;
+    // if (open_paren >= payload_len) {
+    //     fprintf(stderr, "Malformed tensor header (no closing parenthesis)\n");
+    //     return -1;
+    // }
 
-    // Find the end of the ascii type by searching for ')' character
-    size_t close_paren = 0;
-    while (close_paren < payload_len && payload[close_paren] != ')') close_paren++;
-    if (close_paren >= payload_len) {
-        fprintf(stderr, "Malformed tensor header (no closing parenthesis)\n");
-        return -1;
-    }
+    // // Find the end of the ascii type by searching for ')' character
+    // size_t close_paren = 0;
+    // while (close_paren < payload_len && payload[close_paren] != ')') close_paren++;
+    // if (close_paren >= payload_len) {
+    //     fprintf(stderr, "Malformed tensor header (no closing parenthesis)\n");
+    //     return -1;
+    // }
 
-    // shape spans [open_paren .. close_paren]
-    size_t header_len = close_paren - open_paren - 1;
-    int32_t *header = calloc(header_len + 1, 4);
-    memcpy(header, payload + 1, header_len);
+    // // shape spans [open_paren .. close_paren]
+    // size_t header_len = close_paren - open_paren - 1;
+    // int32_t *header = calloc(header_len + 1, 4);
+    // memcpy(header, payload + 1, header_len);
 
-    // remaining bytes are raw data
-    size_t bbytes = payload_len - (header_len + 2);  // -2 for parentheses
-    const uint8_t *bdata = payload + (header_len + 2);
+    // // remaining bytes are raw data
+    // size_t bbytes = payload_len - (header_len + 2);  // -2 for parentheses
+    // const uint8_t *bdata = payload + (header_len + 2);
 
-    // parse shape dimensions
-    int ndim = sizeof(&header)/sizeof(int32_t);
-    int *shape = calloc(ndim, sizeof(int32_t));
-    for (int z = 0; z < ndim; z++) {
-        shape[z] = header[z];
-    }
+    // // parse shape dimensions
+    // int ndim = sizeof(&header)/sizeof(int32_t);
+    // int *shape = calloc(ndim, sizeof(int32_t));
+    // for (int z = 0; z < ndim; z++) {
+    //     shape[z] = header[z];
+    // }
 
-    // compute element size from dtype
-    size_t elem_size = 0;
-    if (strcmp(dtype, "float32") == 0) elem_size = 4;
-    else if (strcmp(dtype, "float64") == 0 || strcmp(dtype, "double") == 0) elem_size = 8;
-    else if (strcmp(dtype, "int32") == 0) elem_size = 4;
-    else if (strcmp(dtype, "uint8") == 0) elem_size = 1;
-    else {
-        fprintf(stderr, "Unsupported tensor dtype: %s\n", dtype);
-    }
+    // // compute element size from dtype
+    // size_t elem_size = 0;
+    // if (strcmp(dtype, "float32") == 0) elem_size = 4;
+    // else if (strcmp(dtype, "float64") == 0 || strcmp(dtype, "double") == 0) elem_size = 8;
+    // else if (strcmp(dtype, "int32") == 0) elem_size = 4;
+    // else if (strcmp(dtype, "uint8") == 0) elem_size = 1;
+    // else {
+    //     fprintf(stderr, "Unsupported tensor dtype: %s\n", dtype);
+    // }
 
-    size_t nelems = 1;
-    for (int d = 0; d < ndim; ++d) nelems *= (size_t)shape[d];
+    // size_t nelems = 1;
+    // for (int d = 0; d < ndim; ++d) nelems *= (size_t)shape[d];
 
-    // allocate and copy
-    void *data_copy = NULL;
-    if (ndim > 0) {
-        size_t total_elements = 1;
-        for (int d = 0; d < ndim; ++d) {
-            total_elements *= (size_t)shape[d];
-        }
+    // // allocate and copy
+    // void *data_copy = NULL;
+    // if (ndim > 0) {
+    //     size_t total_elements = 1;
+    //     for (int d = 0; d < ndim; ++d) {
+    //         total_elements *= (size_t)shape[d];
+    //     }
 
-        size_t expected_bytes = total_elements * elem_size;
-        if (bbytes != expected_bytes) {
-            fprintf(stderr, "Mismatch between expected bytes (%zu) and provided bytes (%zu)\n", expected_bytes, bbytes);
-            free(shape);
-            return -1;
-        }
+    //     size_t expected_bytes = total_elements * elem_size;
+    //     if (bbytes != expected_bytes) {
+    //         fprintf(stderr, "Mismatch between expected bytes (%zu) and provided bytes (%zu)\n", expected_bytes, bbytes);
+    //         free(shape);
+    //         return -1;
+    //     }
 
-        data_copy = malloc(bbytes);
-        if (!data_copy) {
-            fprintf(stderr, "Memory allocation failed for tensor data\n");
-            free(shape);
-            return -1;
-        }
-        memcpy(data_copy, bdata, bbytes);
-    }
+    //     data_copy = malloc(bbytes);
+    //     if (!data_copy) {
+    //         fprintf(stderr, "Memory allocation failed for tensor data\n");
+    //         free(shape);
+    //         return -1;
+    //     }
+    //     memcpy(data_copy, bdata, bbytes);
+    // }
 
-    out->dtype = dtype;
-    out->ndim = ndim;
-    out->shape = shape;
-    out->data = data_copy;
-    out->data_bytes = bbytes;
+    // out->dtype = dtype;
+    // out->ndim = ndim;
+    // out->shape = shape;
+    // out->data = data_copy;
+    // out->data_bytes = bbytes;
 
-    free(header);
+    // free(header);
 
     return 0;
 }
