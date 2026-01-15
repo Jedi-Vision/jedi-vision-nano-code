@@ -24,7 +24,7 @@ RUN mkdir -p /etc/pip && \
     printf "[global]\nindex-url = https://pypi.jetson-ai-lab.io/jp6/cu126\nextra-index-url = https://pypi.ngc.nvidia.com\ntrusted-host = pypi.jetson-ai-lab.io\n" \
     > /etc/pip.conf
 
-RUN pip install --upgrade pip setuptools wheel packaging
+RUN pip install --upgrade pip setuptools wheel packaging ninja
 
 # -----------------------------
 # Install downgraded numpy
