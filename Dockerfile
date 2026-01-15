@@ -52,9 +52,10 @@ RUN git clone --recursive https://github.com/triton-lang/triton.git
 WORKDIR /opt/triton
 RUN git checkout v3.0.0
 RUN git submodule update --init --recursive
+RUN sed -i '/torch/d' requirements.txt
 
-RUN pip install cmake
-RUN python3 install.py
+RUN pip install -r python/requirements.txt # build-time dependencies
+RUN pip install -e .
 
 # -----------------------------
 # Install HuggingFace Transformers and others
