@@ -14,7 +14,7 @@
 
 This installation assumes that you have a Python version between `3.11` and `3.14` installed on your computer.
 
-1. First off, make you have [Poetry](https://python-poetry.org/docs/) installed.
+1. First off, make you have at least [Python 3.10](https://www.python.org/downloads/) installed.
 
 2. Then clone the repository.
 
@@ -36,29 +36,22 @@ This installation assumes that you have a Python version between `3.11` and `3.1
 
     **If running via a docker container please look at the [next section](#nvidia-jetson-orin-nano--docker-container-usage-instructions) for further installation instructions.**
 
-3. (Optional) If you'd like poetry to automatically create a virtual environment *in the project* run the following.
+3. Create a virtual environment and activate
 
-    ```bash
-    poetry config virtualenvs.in-project true
+    ```python
+    python -m venv .venv && source .venv/bin/activate
     ```
 
 4. Navigate to the project folder and install the dependencies
 
-    Then run:
     ```bash
-    poetry install
+    pip install -r requirements.txt
     ```
 
-5. Activate the virtual environment
+5. Then install the `jv` library.
 
-    Run the following to get the activation command for the Poetry virtual environment.
     ```bash
-    poetry env activate
-    ```
-
-    If you configured Poetry to install the virtual environment in the project you can just run:
-    ```bash
-    source .venv/bin/activate
+    pip install .
     ```
 
 6. (Optional) If you are running into a *"No module named jv"* error, try installing our `jv` library in editable mode.
