@@ -79,23 +79,12 @@ RUN sed -i '/torch/d' requirements.txt && \
     sed -i '/transformers/d' requirements.txt && \
     sed -i '/numpy/d' requirements.txt
 RUN pip install -r requirements.txt
-
-RUN curl $'https://dl.boxcloud.com/d/1/b1\041X6GsnOefyCso5CmP_Xi1hxXPwPY8oSSvZqnAnqT8mDNA5kyVtOTvDUDp4xrpNue298CiSVMxXfBEKdyAjhLaoM964sopZYju0P2WRLpP7eaM2I-tX5mbun_l7cydyOfERyvu-QIhWwIRxv_6mV5M4YWnVhy-cE2ulUyz6B_VFOtA1MHb2BMFA_pyJGi59-g1Jsj-vuvMjGmnAeP2FowKAMrk_luex_6pYymruxnzP1_-HwNJVQbjMtbc3bwSUM1wcH8e81CL4W-46ZKn8Y0EMFavmdTJLdKisCUP3FZ3LwVbfTsGWmjGS8RBrjAIh7ONB-9cZ9dgumO7GOcyRWWPdSqc19nYPJHiK1HFfu0jYkgESCWex8qTC_CzOc_-sCzyRZHdn-utxbOfn1TBLO7HkqAzpuJb4J7QUnWCQlRPU-KHTf2wy1vFHi0E7N76YxP7jjCLiFQ9h_SmzmQps-OHe4HYfY2I81QWaVel4J_PZu-g-XqsQI6avr3SClU7EsAtXtuuwH1qztMNVS57aIhRtRNfhb2g0rs6n4w_GbsovTprqMbdutToqnVHwd6AWa2V7H1Jzq22kdZH-RlUgz2C8eClr7N7j-HAdB002UUTHNPjEljpv5n6XFiDXAzC79XvjCmjxWVdlvwAPVU26jbuZDJi37N9FxWFIqTkCzifnppLUVc5DMbzT8qFUSy0WnWSM1zG1Kg3fWvNxwZ9zqOVKtxokM0LVKSp7MlXk8Q9rFuKUP6vhztkMk4S7qOChw8bRFzjag-BGP79NoEqjELpqONCSVy_-T0Hym7oxSHaS4KA_98D7o3n5RZVvXmlA9lqPjqUVjH85m1sBxCtVzNI_EyDcFKZR4LYblUfzT9ft2OqaPmr0g9LDr0ouDl9UbT8bh5eZlq1odZtLl7taNsZ1VPM5lqTZmf6wHGsM4qIBptzKwb1MrWldXTBP6VlYSwQCUaI60J6wBoSJD0Nsj1WLg6Qk_hmo7QpsKYoqi8L6ZIjZ1_c_7OByhvgNBEHJIqiVx5klkHK6GlGh1mRd_JnjRaq5p4ApfP0rSCGleHbcS4w5CohigKyGKX-3BTtuosjVunq5o-zWe9mbRVu411IkkQUPJv3lOMrvPfsXxa538wvy5D4ykzA6q0x7eIbgLuBfpFB9zIcDc3DB2XW5Ieu8FAtyIK5Wnf8zJWCKzvU0A7Tu7kkC5b6mKUTj57cbpD_3d_4oH7lZ2OAu-lAZ7hBd3axSgA2fMiMwBXjtdfY0HdpWVTkCeNEx4JP_AL2JiG1BlipyjVStUQS28SzjBaJDJW184IRsAws78hbS6aXEAxukeSED520SI5SZGVHb4KKkos7_qVglHYOwQIl818UNOlKPCxmNb_g5sMwII4RomBJ-yR7pMNqnNOl31LSVh-ghvQKkg1q8TWYfHka2QqtbdBeCW1dTVvoDKupg54YeFst252MYJL8Ez0QTvXU0I1xTIzT4ygds_kXasUuZEgarUqjo-_pGGmcINHrjlcguXohgLMM5A../download' \
-  --compressed \
-  --output example/videos/sidewalk_pov.mp4 \
-  -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) Gecko/20100101 Firefox/146.0' \
-  -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
-  -H 'Accept-Language: en-US,en;q=0.5' \
-  -H 'Accept-Encoding: gzip, deflate, br, zstd' \
-  -H 'Referer: https://oregonstate.app.box.com/' \
-  -H 'Alt-Used: dl.boxcloud.com' \
-  -H 'Connection: keep-alive' \
-  -H 'Cookie: b=069282ef78579a8f9c36bb01686877a8c19241655af6cb6d19c30dba82ffc2da' \
-  -H 'Upgrade-Insecure-Requests: 1' \
-  -H 'Sec-Fetch-Dest: iframe' \
-  -H 'Sec-Fetch-Mode: navigate' \
-  -H 'Sec-Fetch-Site: cross-site' \
-  -H 'Sec-Fetch-User: ?1' \
-  -H 'Priority: u=4'
-
 RUN bash get_weights.sh
+
+# -----------------------------
+# Download example videos
+# -----------------------------
+
+# Fetch video
+RUN curl -L https://oregonstate.box.com/shared/static/3p1ohmn4tm6ytwccnp3tdvtbiybk4c53.mp4 -o examples/videos/sidewalk_pov.mp4
+RUN curl -L https://oregonstate.box.com/shared/static/neyzpi2f42knbavdvdcvcpdir1zqm3o7.mov -o examples/videos/two_people.mov
