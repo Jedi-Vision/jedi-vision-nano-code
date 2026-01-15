@@ -54,7 +54,7 @@ RUN git checkout v3.0.0
 RUN git submodule update --init --recursive
 
 RUN pip install ninja cmake wheel
-RUN pip install -e .
+RUN pip install -e python --no-build-isolation
 
 # -----------------------------
 # Install HuggingFace Transformers and others
