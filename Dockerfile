@@ -46,11 +46,11 @@ RUN pip install ninja && \
 
 # -----------------------------
 # Build Triton 3.0.0
-# -----------------------------
+# ---------v--------------------
 WORKDIR /opt
-RUN git clone --recursive https://github.com/triton-lang/triton
+RUN git clone --recursive https://github.com/triton-lang/triton.git
 WORKDIR /opt/triton
-RUN git checkout 3.0.0
+RUN git checkout v3.0.0
 RUN git submodule update --init --recursive
 
 RUN pip install cmake
