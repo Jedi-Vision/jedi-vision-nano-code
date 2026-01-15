@@ -32,7 +32,7 @@ RUN pip install --upgrade pip setuptools wheel packaging ninja
 RUN python3 -m pip install --upgrade --force-reinstall --no-cache-dir "numpy<2"
 
 # -----------------------------
-# Build xFormers v0.0.33 (compatible with PyTorch 2.4)
+# Build xFormers v0.0.28 (compatible with PyTorch 2.4)
 # -----------------------------
 WORKDIR /opt
 RUN git clone --recursive https://github.com/facebookresearch/xformers.git
@@ -45,10 +45,10 @@ RUN pip install ninja && \
     pip install -v --no-build-isolation .
 
 # -----------------------------
-# Build Triton 2.1.0
+# Build Triton 3.0.0
 # -----------------------------
 WORKDIR /opt
-RUN git clone --recursive https://github.com/openai/triton.git
+RUN git clone --recursive https://github.com/triton-lang/triton
 WORKDIR /opt/triton
 RUN git checkout 3.0.0
 RUN git submodule update --init --recursive
