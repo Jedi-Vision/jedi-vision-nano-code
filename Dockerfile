@@ -37,26 +37,40 @@ RUN python3 -m pip install --upgrade --force-reinstall --no-cache-dir "numpy<2"
 WORKDIR /opt
 RUN git clone --recursive https://github.com/facebookresearch/xformers.git
 WORKDIR /opt/xformers
-RUN git checkout v0.0.33
+RUN git checkout v0.0.28
+RUN git submodule update --init --recursive
 RUN sed -i '/torch/d' requirements.txt
 
 RUN pip install ninja && \
     pip install -v --no-build-isolation .
 
 # -----------------------------
-# Install HuggingFace Transformers (pure Python)
+# Build Triton 2.1.0
+# -----------------------------
+WORKDIR /opt
+RUN git clone --recursive https://github.com/openai/triton.git
+WORKDIR /opt/triton
+RUN git checkout 3.0.0
+RUN git submodule update --init --recursive
+
+RUN pip install cmake
+RUN python3 install.py
+
+# -----------------------------
+# Install HuggingFace Transformers and others
 # -----------------------------
 RUN pip install --no-build-isolation \
     "transformers>=4.55,<5.0" \
     tokenizers \
     sentencepiece \
     safetensors \
-    accelerate
+    accelerate \
+    triton
 
 WORKDIR /workspace
 
 # -----------------------------
-# Install jv
+# Install jv + requirements
 # -----------------------------
 RUN git clone --recursive https://github.com/Jedi-Vision/jedi-vision-nano-code.git
 WORKDIR /workspace/jedi-vision-nano-code
