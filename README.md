@@ -20,18 +20,12 @@ This installation assumes that you have a Python version between `3.11` and `3.1
 
     via HTTP
     ```bash
-    git clone https://github.com/Jedi-Vision/jedi-vision-nano-code.git
+    git clone --recursive https://github.com/Jedi-Vision/jedi-vision-nano-code.git
     ```
 
     via SSH
     ```bash
-    git clone git@github.com:Jedi-Vision/jedi-vision-nano-code.git
-    ```
-    
-    Also make sure to initialize the submodules,
-    ```bash
-    cd jedi-vision-nano-code
-    git submodule update --init --recursive
+    git clone --recursive git@github.com:Jedi-Vision/jedi-vision-nano-code.git
     ```
 
     **If running via a docker container please look at the [next section](#nvidia-jetson-orin-nano--docker-container-usage-instructions) for further installation instructions.**
@@ -68,7 +62,7 @@ Since building everything from scratch takes more memory than is available on th
 Run the command
 
 ```bash
-sudo docker build -t jp61-orin-xformers .
+sudo docker build -t jp61-orin-xformers:latest .
 ```
 
 ### Running

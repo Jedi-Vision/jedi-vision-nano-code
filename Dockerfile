@@ -6,6 +6,11 @@ ENV CUDA_HOME=/usr/local/cuda
 ENV USE_NINJA=1
 ENV MAX_JOBS=4
 
+# Override NVIDIA's baked-in pip env vars
+ENV PIP_INDEX_URL=https://pypi.jetson-ai-lab.io/jp6/cu126
+ENV PIP_EXTRA_INDEX_URL=https://pypi.ngc.nvidia.com
+ENV PIP_TRUSTED_HOST=pypi.jetson-ai-lab.io
+
 RUN apt-get update && apt-get install -y \
     git cmake ninja-build \
     libopenblas-dev libomp-dev \
@@ -22,12 +27,17 @@ RUN mkdir -p /etc/pip && \
 RUN pip install --upgrade pip setuptools wheel packaging
 
 # -----------------------------
+# Install downgraded numpy
+# -----------------------------
+RUN python3 -m pip install "numpy<2" --no-cache-dir
+
+# -----------------------------
 # Build xFormers v0.0.33 (compatible with PyTorch 2.4)
 # -----------------------------
 WORKDIR /opt
 RUN git clone --recursive https://github.com/facebookresearch/xformers.git
 WORKDIR /opt/xformers
-RUN git checkout v0.0.33
+RUN git checkout v0.0.32
 RUN sed -i '/torch/d' requirements.txt
 
 RUN pip install ninja && \
@@ -37,7 +47,7 @@ RUN pip install ninja && \
 # Install HuggingFace Transformers (pure Python)
 # -----------------------------
 RUN pip install --no-build-isolation \
-    "transformers<4.42" \
+    "transformers>=4.55,<5.0" \
     tokenizers \
     sentencepiece \
     safetensors \
@@ -45,3 +55,13 @@ RUN pip install --no-build-isolation \
 
 WORKDIR /workspace
 
+# -----------------------------
+# Install jv
+# -----------------------------
+RUN git clone --recursive https://github.com/Jedi-Vision/jedi-vision-nano-code.git
+WORKDIR /workspace/jedi-vision-nano-code
+RUN pip install .
+RUN sed -i '/torch/d' requirements.txt && \
+    sed -i '/torchvision/d' requirements.txt \
+    sed -i '/transformers/d' requirements.txt
+RUN pip install -r requirements.txt
