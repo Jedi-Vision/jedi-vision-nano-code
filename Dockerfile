@@ -64,8 +64,7 @@ RUN pip install --no-build-isolation \
     tokenizers \
     sentencepiece \
     safetensors \
-    accelerate \
-    triton
+    accelerate
 
 WORKDIR /workspace
 
