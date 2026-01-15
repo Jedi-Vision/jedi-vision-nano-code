@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --upgrade pip setuptools wheel packaging
+RUN pip install poetry
 
 # -----------------------------
 # Build xFormers v0.0.33 (compatible with PyTorch 2.4)
