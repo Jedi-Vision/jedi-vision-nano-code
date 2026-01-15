@@ -29,7 +29,7 @@ RUN pip install --upgrade pip setuptools wheel packaging
 # -----------------------------
 # Install downgraded numpy
 # -----------------------------
-RUN python3 -m pip install "numpy<2" --no-cache-dir
+RUN python3 -m pip install --upgrade --force-reinstall --no-cache-dir "numpy<2"
 
 # -----------------------------
 # Build xFormers v0.0.33 (compatible with PyTorch 2.4)
@@ -37,7 +37,7 @@ RUN python3 -m pip install "numpy<2" --no-cache-dir
 WORKDIR /opt
 RUN git clone --recursive https://github.com/facebookresearch/xformers.git
 WORKDIR /opt/xformers
-RUN git checkout v0.0.32
+RUN git checkout v0.0.33
 RUN sed -i '/torch/d' requirements.txt
 
 RUN pip install ninja && \
@@ -62,6 +62,6 @@ RUN git clone --recursive https://github.com/Jedi-Vision/jedi-vision-nano-code.g
 WORKDIR /workspace/jedi-vision-nano-code
 RUN pip install .
 RUN sed -i '/torch/d' requirements.txt && \
-    sed -i '/torchvision/d' requirements.txt \
+    sed -i '/torchvision/d' requirements.txt && \
     sed -i '/transformers/d' requirements.txt
 RUN pip install -r requirements.txt
