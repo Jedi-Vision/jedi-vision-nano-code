@@ -26,5 +26,15 @@ RUN sed -i '/torch/d' requirements.txt
 RUN pip install ninja && \
     pip install -v --no-build-isolation .
 
+# -----------------------------
+# Install HuggingFace Transformers (pure Python)
+# -----------------------------
+RUN pip install --no-build-isolation \
+    "transformers<4.42" \
+    tokenizers \
+    sentencepiece \
+    safetensors \
+    accelerate
+
 WORKDIR /workspace
 
