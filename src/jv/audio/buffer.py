@@ -19,7 +19,8 @@ class ObjectBuffer:
         self,
         size: int = 0,
         addr: str = "/tmp/jv/audio/0.sock",
-        output_to: Literal["socket", "file", "none"] = "socket"
+        output_to: Literal["socket", "file", "none"] = "socket",
+        serial_type: Literal["struct", "protobuf"] = "struct"
     ):
         """
         Initializes the buffer with a queue, a ZeroMQ context, and starts a client connection.
@@ -34,6 +35,7 @@ class ObjectBuffer:
         self.ctx = zmq.Context()
         self.addr = addr
         self.thread = None
+        self.serial_type: Literal["struct", "protobuf"] = serial_type
 
         self.output_to = output_to
         if self.output_to == "file":
@@ -52,6 +54,7 @@ class ObjectBuffer:
         self.running = False
         if self.thread is not None:
             self.thread.join()
+        self.socket.close()
         self.ctx.term()
 
     def put(self, message: ObjectRepData) -> None:
@@ -76,7 +79,7 @@ class ObjectBuffer:
                 Python objects and C structs.
 
         Returns:
-            bytes | str
+            bytes
         """
 
         if type == "protobuf":
@@ -94,14 +97,11 @@ class ObjectBuffer:
         while self.running:
 
             try:
-                if self.q.full():
-                    self.q.get()  # Remove the oldest frame to make space
-
                 message = self.q.get(timeout=0.001)
 
                 if self.output_to == "socket":
 
-                    serialized_message = self._serialize_message(message)
+                    serialized_message = self._serialize_message(message, type=self.serial_type)
 
                     # print("Sending message.")
                     self.socket.send(serialized_message)

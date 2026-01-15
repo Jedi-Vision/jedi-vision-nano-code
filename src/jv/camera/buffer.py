@@ -49,7 +49,6 @@ class FrameBuffer:
 
     def stop(self):
         """Stops the frame capturing thread and releases the camera."""
-        self.q.join()
         self.running = False
         if self.thread is not None:
             self.thread.join()

@@ -1,1 +1,5 @@
-jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv jv-pytorch-container
+sudo docker run -it --rm \
+    --runtime nvidia \
+    --network host \
+    -v $PWD:/workspace/jv \
+    jp61-orin-xformers

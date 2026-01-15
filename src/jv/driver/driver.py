@@ -27,6 +27,7 @@ class Driver:
         self,
         device: Literal["cpu", "mps", "cuda"],
         output_to: Literal["socket", "file", "none"] = "socket",
+        serial_type: Literal["struct", "protobuf"] = "struct",
         object_model_name: str = "yolo11",
         vda_model_name: str = "vits",
         chkpts_folder: str = "./checkpoints",
@@ -76,7 +77,11 @@ class Driver:
             retain_frames=retain_frames,
         )
 
-        self.object_buffer = ObjectBuffer(size=object_buffer_size, output_to=output_to)
+        self.object_buffer = ObjectBuffer(
+            size=object_buffer_size,
+            output_to=output_to,
+            serial_type=serial_type
+        )
 
         self.depth = depth
         self.scene_model = VideoDepthAnything(**MODEL_CONFIGS[vda_model_name])
@@ -146,3 +151,21 @@ class Driver:
             frame_count += 1
             msg = self.model_run(*frame)
             self.object_buffer.put(msg)
+
+            try:
+                while True:
+                    frame = self.frame_buffer.get()
+                    if frame is None:
+                        continue
+                    frame_count += 1
+                    msg = self.model_run(*frame)
+                    self.object_buffer.put(msg)
+            except KeyboardInterrupt:
+                print("Interrupted by user (SIGINT). Exiting...")
+
+                print("Terminating frame buffer...")
+                self.frame_buffer.stop()
+                print("Terminating object buffer...")
+                self.object_buffer.stop()
+
+                exit(0)

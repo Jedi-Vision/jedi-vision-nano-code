@@ -69,11 +69,37 @@ This installation assumes that you have a Python version between `3.11` and `3.1
 
 ## NVIDIA Jetson Orin Nano / Docker Container Usage Instructions
 
+Since building everything from scratch takes more memory than is available on the Jetson, even through swap memory. We build upon an existing l4t-pytorch image, and manually build xFormers and some other dependencies we needed.
+
+### Installation
+Run the command
+
+```bash
+sudo docker build -t jp61-orin-xformers .
+```
+
+### Running
+
+Run using the following:
+```bash
+sudo docker run -it --rm \
+    --runtime nvidia \
+    --network host \
+    -v $PWD:/workspace/jv \
+    jp61-orin-xformers
+```
+
+It is also possible to run this command from `start_container.sh`.
+
+### Alternative: Jetson Containers
+
 To use this software package on a Jetson Orin Nano, we utilized the [jetson-containers](https://github.com/dusty-nv/jetson-containers) library from Dustin Franklin.
 
 We have included a fork of the repository with a Jedi-Vision specific PyTorch container which includes all the needed dependencies and Poetry setup.
 
-### Installation
+***This will probably fail due to lack of memory in building PyTorch.***
+
+#### Installation
 
 To install on a Jetson Orin Nano with Jetpack 6.2 (nvidia-l4t-core 36.4.7) with Docker container run the following:
 
@@ -85,7 +111,7 @@ cd jedi-vision-nano-code
 bash src/jetson-containers/install.sh
 ```
 
-#### Docker Default Runtime
+##### Docker Default Runtime
 
 If you're going to be building containers, you need to set Docker's `default-runtime` to `nvidia`, so that the NVCC compiler and GPU are available during `docker build` operations.  Add `"default-runtime": "nvidia"` to your `/etc/docker/daemon.json` configuration file before attempting to build the containers:
 
@@ -115,7 +141,7 @@ $ sudo docker info | grep 'Default Runtime'
 Default Runtime: nvidia
 ```
 
-#### Build Container
+##### Build Container
 
 ```bash
 # Build the PyTorch container with specific CUDA version (12.6)
@@ -133,18 +159,20 @@ cd workspace/jv
 POETRY_VIRTUALENVS_CREATE=false poetry install
 ```
 
-### Usage
+#### Usage
 
 Use the provided `start_container.sh`
 
 ```bash
-bash start_container.sh
+jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv \
+    jv-pytorch-container:r36.4.tegra-aarch64-cu126-22.04-python
 ```
 
 Or run the container directly with `jetson-containers` and link the existing repository to a volume inside the container.
 ```bash
 cd ../  # navigate to outside of repo folder
-jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv jv-pytorch-container
+jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv \
+    jv-pytorch-container
 ```
 
 The command `-v ./jedi-vision-nano-code:/workspace/jv` links the repository folder `jedi-vision-nano-code` to a folder `workspace/jv`
