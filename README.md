@@ -76,7 +76,16 @@ sudo docker run -it --rm \
     jp61-orin-xformers
 ```
 
-It is also possible to run this command from `start_container.sh`.
+(It is also possible to run this command from `start_container.sh`.)
+
+Then start the pipeline:
+
+```bash
+python3 main.py
+```
+
+You'll likely need to configure the Driver arguments in `main.py`.
+
 
 ### Alternative: Jetson Containers
 
