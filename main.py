@@ -1,16 +1,43 @@
 from jv import Driver
+import yaml
+import argparse
 
-driver = Driver(
-    device="mps",
-    output_to="none",
-    # camera_index="examples/videos/sidewalk_pov.mp4",
-    camera_index="examples/videos/two_people.mov",
-    object_buffer_size=1,
-    frame_buffer_size=1000,
-    frame_skip=0,
-    frame_rate=30,
-    show_det=True,
-    depth=False
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-c", "--config",
+    type=str,
+    default="config/default.yaml",
+    help="Configuration file containing arguments for Driver."
 )
+parser.add_argument(
+    "-a", "--args",
+    type=str,
+    action="store",
+    nargs='*',
+    help="Arguments to replace any config field in 'key:value' style."
+)
+args = parser.parse_args()
 
-driver.run()
+extra_args = {}
+for arg in args.args:
+    k, v = arg.split(":")
+    extra_args[k] = v
+
+with open(args.config) as f:
+    config = yaml.safe_load(f)
+
+driver_kwargs = config['driver']
+object_kwargs = config['object']
+depth_kwargs = config['depth']
+
+for key, value in extra_args.items():
+    if key in driver_kwargs:
+        driver_kwargs[key] = value
+    elif key in object_kwargs:
+        object_kwargs[key] = value
+    elif key in depth_kwargs:
+        depth_kwargs[key] = value
+
+driver = Driver(**driver_kwargs)
+driver.run(object_kwargs, depth_kwargs)

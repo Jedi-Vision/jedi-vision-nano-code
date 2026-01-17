@@ -1,0 +1,28 @@
+---
+
+driver:
+    device: cuda  # cpu, mps, or cuda
+    output_to: none  # socket, file, or none
+    serial_type: struct  # struct or protobuf
+    object_model_name: yolo11
+    vda_model_name: vits
+    chkpts_folder: ./checkpoints
+    retain_frames: 30
+    object_buffer_size: 0
+    frame_buffer_size: 1
+    warmup_frames: 30
+    camera_index: 0
+    frame_skip: 0
+    frame_rate: 30
+    show_det: true
+    depth: true
+    metric: false  # enables absolute/metric depth
+
+object:
+    tracker: bytetrack.yaml  # botsort.yaml or bytetrack.yaml
+    conf: 0.25
+    iou: 0.7
+    half: false  # half-precision inference
+
+depth:
+    fp32: true  # fp32=False causes a black output and NaN values in model

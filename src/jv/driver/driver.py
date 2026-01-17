@@ -100,9 +100,9 @@ class Driver:
         self.show_det = show_det
 
     @timeit
-    def model_run(self, frame, frame_number, timestamp_ms):
+    def model_run(self, frame, frame_number, timestamp_ms, object_kwargs, depth_kwargs):
 
-        objects = self.env_model.run(frame, show_det=self.show_det)
+        objects = self.env_model.run(frame, show_det=self.show_det, **object_kwargs)
 
         if self.depth:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
@@ -110,8 +110,8 @@ class Driver:
                 frame,
                 input_size=518,
                 device=self.device,
-                fp32=True  # fp32=False causes a black output and NaN values in model
-            )
+                **depth_kwargs
+            )  # fp32=False causes a black output and NaN values in model
 
             # Add depth information to objects
             depth = torch.tensor(depth)
@@ -133,7 +133,7 @@ class Driver:
             objects=objects
         )
 
-    def run(self):
+    def run(self, object_kwargs: dict = {}, depth_kwargs: dict = {}):
 
         print("Starting...")
 
@@ -145,20 +145,17 @@ class Driver:
 
         while True:
 
-            frame = self.frame_buffer.get()
-            if frame is None:
-                continue
-            frame_count += 1
-            msg = self.model_run(*frame)
-            self.object_buffer.put(msg)
-
             try:
                 while True:
                     frame = self.frame_buffer.get()
                     if frame is None:
                         continue
                     frame_count += 1
-                    msg = self.model_run(*frame)
+                    msg = self.model_run(
+                        *frame,
+                        object_kwargs=object_kwargs,
+                        depth_kwargs=depth_kwargs
+                    )
                     self.object_buffer.put(msg)
             except KeyboardInterrupt:
                 print("Interrupted by user (SIGINT). Exiting...")

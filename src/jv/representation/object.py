@@ -274,7 +274,14 @@ class YoloObjectRepresentationModel(AbstractModelClass):
         pass
 
     def process(self, input, **kwargs) -> Results:
-        return self.model.track(input, persist=True, device=self.device, tracker="bytetrack.yaml")[0]
+        kwargs.pop("show_det")
+
+        return self.model.track(
+            input,
+            persist=True,
+            device=self.device,
+            **kwargs
+        )[0]
 
     def postprocess(self, out: Results, **kwargs) -> list[ObjectCoordData]:
 
