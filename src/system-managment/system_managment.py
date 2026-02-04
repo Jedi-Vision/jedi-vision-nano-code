@@ -5,15 +5,6 @@ The point of this file is to create a SystemManagment class that can:
     Write JSON log lines to a log file of the current state of the interface properties as well as the metrics
 
 
-One main goal is to provide a simple decorator that other modules can use to:
-    Automtically record when a function starts and ends
-    Record the duration of the function
-    Record the return value of the function             TODO
-    Record any exception raised by the function         TODO
-
-
-
-
 Typical usage from another module (Import and call the decorator on a function):
 
     from system_management import sys_mgmt, log_block
