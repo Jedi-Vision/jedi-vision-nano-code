@@ -175,3 +175,27 @@ jetson-containers run -v ./jedi-vision-nano-code:/workspace/jv \
 ```
 
 The command `-v ./jedi-vision-nano-code:/workspace/jv` links the repository folder `jedi-vision-nano-code` to a folder `workspace/jv`
+
+## Jetson Orin Nano Power Mode
+
+On the Jetson, there are different power modes available that result in better computational power. However, this is at the cost of higher temperatures and more powerdraw.
+
+To check the current power mode run
+```bash
+sudo nvpmodel -q
+```
+
+To change the power mode you can run the following
+```bash
+sudo nvpmodel -m $MODE
+```
+With `$MODE` being a number 0-2.
+
+The modes are as follows
+```
+0: NV Power Mode: 15W
+1: NV Power Mode: 25W
+2: NV Power Mode: MAXN_SUPER
+```
+
+It is recommended for the best inference speeds to run with the `MAXN_SUPER` power mode.
