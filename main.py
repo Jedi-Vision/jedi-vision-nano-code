@@ -20,9 +20,10 @@ parser.add_argument(
 args = parser.parse_args()
 
 extra_args = {}
-for arg in args.args:
-    k, v = arg.split(":")
-    extra_args[k] = v
+if args.args:
+    for arg in args.args:
+        k, v = arg.split(":")
+        extra_args[k] = v
 
 with open(args.config) as f:
     config = yaml.safe_load(f)
