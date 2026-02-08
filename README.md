@@ -1,4 +1,4 @@
-# Jedi Vision Project Code for Jetson Nano
+# Jedi Vision Project Code
 
 ## Contains
 * Scene representation conversion
@@ -9,6 +9,8 @@
   * Grounded object tracking model
 * Audio representation
   * Python bindings to Steam Audio
+* Serialization
+  * Custom serialization of object information and bindings for IPC client/server connection
 
 ## Installation
 
@@ -53,6 +55,24 @@ This installation assumes that you have a Python version between `3.11` and `3.1
     ```bash
     pip install -e .
     ```
+
+## Running
+
+We make use of modifiable `.yaml` files for easy configuration of parameters (see `/config/default.yaml` and `/src/jv/driver/driver.py` for more information on possible parameters).
+
+To run, just input the following:
+```bash
+python main.py
+
+    usage: main.py [-h] [-c CONFIG] [-a [ARGS ...]]
+
+    options:
+    -h, --help            show this help message and exit
+    -c CONFIG, --config CONFIG
+                            Configuration file containing arguments for Driver.
+    -a [ARGS ...], --args [ARGS ...]
+                            Arguments to replace any config field in 'key:value' style.
+```
 
 ## NVIDIA Jetson Orin Nano / Docker Container Usage Instructions
 
