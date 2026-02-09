@@ -7,22 +7,11 @@ from typing import Literal
 import torch
 import cv2
 import time
-from functools import wraps
 
-# Import system management
-import sys
-sys.path.append('~/src/system-managment')
-from system_managment import sys_mgmt, log_block
+from jv.management import SystemManagement, log_block
 
-def timeit(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start = time.time()
-        result = func(*args, **kwargs)
-        end = time.time()
-        print(f"{func.__name__} executed in {(end - start) * 1000:.4f} ms")
-        return result
-    return wrapper
+
+sys_mgmt = SystemManagement()
 
 
 class Driver:
@@ -110,14 +99,13 @@ class Driver:
         sys_mgmt.logMetric("driver.initialized", True)
 
     @log_block("model_inference")
-    @timeit
     def model_run(self, frame, frame_number, timestamp_ms, object_kwargs, depth_kwargs):
         # Log frame processing
         sys_mgmt.logMetric("frame.number", frame_number)
         sys_mgmt.logMetric("frame.timestamp_ms", timestamp_ms)
 
         objects = self.env_model.run(frame, show_det=self.show_det, **object_kwargs)
-        
+
         # Log object detection results
         sys_mgmt.logMetric("objects.detected_count", len(objects))
 
@@ -134,7 +122,7 @@ class Driver:
             depth = torch.tensor(depth)
             for obj in objects:
                 obj.depth = depth[int(obj.y_2d)][int(obj.x_2d)].item()
-            
+
             # Log depth statistics
             sys_mgmt.logMetric("depth.min", depth.min().item())     #TODO Review these metrics
             sys_mgmt.logMetric("depth.max", depth.max().item())
@@ -175,7 +163,7 @@ class Driver:
                     if frame is None:
                         continue
                     frame_count += 1
-                    
+
                     # Calculate and log FPS every 30 frames
                     if frame_count % 30 == 0:
                         elapsed = time.time() - start_time
@@ -183,20 +171,20 @@ class Driver:
                         sys_mgmt.logMetric("driver.fps", fps)
                         sys_mgmt.tokensPerSec = fps  # Update interface property
                         start_time = time.time()
-                    
+
                     msg = self.model_run(
                         *frame,
                         object_kwargs=object_kwargs,
                         depth_kwargs=depth_kwargs
                     )
                     self.object_buffer.put(msg)
-                    
+
                     # Record frame group processed
                     sys_mgmt.recordFrameGroupProcessed(f"frame_{frame_count}")
-                    
+
             except KeyboardInterrupt:
                 print("Interrupted by user (SIGINT). Exiting...")
-                
+
                 # Log shutdown metrics
                 sys_mgmt.logMetric("driver.total_frames_processed", frame_count)
                 sys_mgmt.logMetric("driver.shutdown", True)
