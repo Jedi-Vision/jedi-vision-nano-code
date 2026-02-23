@@ -77,9 +77,27 @@ RUN pip install .
 RUN sed -i '/torch/d' requirements.txt && \
     sed -i '/torchvision/d' requirements.txt && \
     sed -i '/transformers/d' requirements.txt && \
-    sed -i '/numpy/d' requirements.txt
+    sed -i '/numpy/d' requirements.txt \
+    sed -i '/opencv-python/d' requirements.txt
 RUN pip install -r requirements.txt
 RUN bash get_weights.sh
+
+# -----------------------------
+# Install GStreamer
+# -----------------------------
+RUN apt-get update && \
+    apt-get install \
+    gstreamer1.0-tools \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-libav && \
+    apt-get install \
+    libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev \
+    libgstreamer-plugins-good1.0-dev \
+    libgstreamer-plugins-bad1.0-dev
 
 # -----------------------------
 # Download example videos
