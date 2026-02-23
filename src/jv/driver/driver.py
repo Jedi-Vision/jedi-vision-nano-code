@@ -29,11 +29,13 @@ class Driver:
         frame_buffer_size: int = 0,
         warmup_frames: int = 30,
         camera_index: str | int = 0,
+        binocular: bool = True,
         frame_skip: int = 0,
         frame_rate: int = 30,
         show_det: bool = False,
         depth: bool = True,
-        metric: bool = False
+        metric: bool = False,
+        gstreamer_kwargs: dict = {}
     ) -> None:
         """
         Initializes the driver with specified configuration for device, output, models, buffers, and video processing.
@@ -48,12 +50,15 @@ class Driver:
             object_buffer_size (int, optional): Size of the object buffer. Defaults to 0.
             frame_buffer_size (int, optional): Size of the frame buffer. Defaults to 0.
             warmup_frames (int, optional): Number of warmup frames for frame buffer. Defaults to 30.
-            camera_index (str | int, optional): Index or identifier for the camera source. Defaults to 0.
+            camera_index (str | int, optional): Index or identifier for the camera source if monocular. Defaults to 0.
+            binocular (bool, optional): Indicates whether camera setup is binocular. Uses GStreamer pipeline to access
+                cameras.
             frame_skip (int, optional): Number of frames to skip between processing. Defaults to 0.
             frame_rate (int, optional): Frame rate for video capture. Defaults to 30.
             show_det (bool, optional): Whether to display detection results. Defaults to False.
             depth (bool, optional): Whether to enable depth estimation. Defaults to True.
             metric (bool, optional): Whether to use metric depth estimation model. Defaults to False.
+            gstreamer_args (dict, optional): GStreamer kwargs. See buffer.py for more information.
         """
 
         self.frame_buffer = FrameBuffer(
@@ -61,7 +66,9 @@ class Driver:
             camera_index=camera_index,
             warmup_frames=warmup_frames,
             frame_skip=frame_skip,
-            frame_rate=frame_rate
+            frame_rate=frame_rate,
+            binocular=binocular,
+            gstreamer_kwargs=gstreamer_kwargs
         )
 
         self.env_model = YoloObjectRepresentationModel(
@@ -77,6 +84,7 @@ class Driver:
         )
 
         self.depth = depth
+        self.binocular = binocular
         self.scene_model = VideoDepthAnything(**MODEL_CONFIGS[vda_model_name])
         checkpoint_name = 'metric_video_depth_anything' if metric else 'video_depth_anything'
         self.scene_model.load_state_dict(
@@ -110,13 +118,17 @@ class Driver:
         sys_mgmt.logMetric("objects.detected_count", len(objects))
 
         if self.depth:
-            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
-            depth = self.scene_model.infer_video_depth_one(
-                frame,
-                input_size=518,
-                device=self.device,
-                **depth_kwargs
-            )  # fp32=False causes a black output and NaN values in model
+            # TODO create depth module classes, add block matching algo through cv2
+            if self.binocular:
+                depth = None
+            else:  # use monocular depth model
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
+                depth = self.scene_model.infer_video_depth_one(
+                    frame,
+                    input_size=518,
+                    device=self.device,
+                    **depth_kwargs
+                )  # fp32=False causes a black output and NaN values in model
 
             # Add depth information to objects
             depth = torch.tensor(depth)
@@ -124,7 +136,7 @@ class Driver:
                 obj.depth = depth[int(obj.y_2d)][int(obj.x_2d)].item()
 
             # Log depth statistics
-            sys_mgmt.logMetric("depth.min", depth.min().item())     #TODO Review these metrics
+            sys_mgmt.logMetric("depth.min", depth.min().item())  # TODO Review these metrics
             sys_mgmt.logMetric("depth.max", depth.max().item())
             sys_mgmt.logMetric("depth.mean", depth.mean().item())
 

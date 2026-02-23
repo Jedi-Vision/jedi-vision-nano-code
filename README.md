@@ -219,3 +219,30 @@ The modes are as follows
 ```
 
 It is recommended for the best inference speeds to run with the `MAXN_SUPER` power mode.
+
+## Connecting Camera via CSI
+
+In order to configure the CSI connector pin's to support a camera connection, launch Jetson-IO:
+
+```bash
+sudo /opt/nvidia/jetson-io/jetson-io.py
+```
+
+Then, select 
+1. `Configure Jetson Nano CSI Connector`
+2. `Configure for compatible hardware`
+
+From there you can select from the available options, or [custom configurations](https://docs.nvidia.com/jetson/archives/r35.3.1/DeveloperGuide/text/SD/CameraDevelopment/SensorSoftwareDriverProgramming.html#sd-cameradevelopment-sensorsoftwaredriverprogramming-kernelconfiguration) if you are adding a non-natively supported device with custom drivers. Then,
+
+1. `Save pin changes`
+2. `Save and reboot to reconfigure pins`
+
+After rebooting, run the following to ensure that you can see the available cameras:
+
+```bash
+ls /dev/video*
+```
+
+### Calibrating Camera
+
+Camera's typically have distortion, and due to that they need to be calibrated to determine the extrinsic and intrinsic parameters, which can then be used to undistort an image. Read [this](https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html) for more information.

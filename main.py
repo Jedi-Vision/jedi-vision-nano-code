@@ -31,6 +31,7 @@ with open(args.config) as f:
 driver_kwargs = config['driver']
 object_kwargs = config['object']
 depth_kwargs = config['depth']
+gstreamer_kwargs = config['gstreamer']
 
 for key, value in extra_args.items():
     if key in driver_kwargs:
@@ -39,6 +40,8 @@ for key, value in extra_args.items():
         object_kwargs[key] = value
     elif key in depth_kwargs:
         depth_kwargs[key] = value
+    elif key in gstreamer_kwargs:
+        gstreamer_kwargs[key] = value
 
-driver = Driver(**driver_kwargs)
+driver = Driver(**driver_kwargs, gstreamer_kwargs=gstreamer_kwargs)
 driver.run(object_kwargs, depth_kwargs)
