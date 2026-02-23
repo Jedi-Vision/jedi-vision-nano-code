@@ -95,6 +95,7 @@ sudo docker run -it --rm \
     -v $PWD:/workspace/jv \
     -v /tmp/.X11-unix/:/tmp/.X11-unix \
     -v $HOME/.Xauthority:/root/.Xauthority:rw \
+    -v /dev:/dev \
     -e DISPLAY=$DISPLAY \
     jp61-orin-xformers
 ```
