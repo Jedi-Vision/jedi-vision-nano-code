@@ -247,6 +247,8 @@ After rebooting, run the following to ensure that you can see the available came
 ls /dev/video*
 ```
 
+NOTE: Using the Argus API for GStreamer requires that X11 is disabled, i.e. it will not be able to connected to an X11 socket and will crash. Therein, although you can still access over SSH with X11 enabled, ensure that you add `DEVICE=:0` before any command when running anything that uses the GStreamer backend.
+
 ### Calibrating Camera
 
 Camera's typically have distortion, and due to that they need to be calibrated to determine the extrinsic and intrinsic parameters, which can then be used to undistort an image. Read [this](https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html) for more information.
