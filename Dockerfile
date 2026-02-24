@@ -103,7 +103,7 @@ RUN apt-get update && \
 # Ensure OpenCV built with GStreamer
 # -----------------------------
 RUN pip3 uninstall opencv-python -y
-RUN apt-get update && apt-get install -U -y \
+RUN apt-get update && apt-get install -y \
     python3-opencv \
     libopencv-dev
 
