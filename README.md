@@ -247,7 +247,7 @@ After rebooting, run the following to ensure that you can see the available came
 ls /dev/video*
 ```
 
-NOTE: Using the Argus API for GStreamer requires that X11 is disabled, i.e. it will not be able to connected to an X11 socket and will crash. Therein, although you can still access over SSH with X11 enabled, ensure that you add `DEVICE=:0` before any command when running anything that uses the GStreamer backend.
+NOTE: Using the Argus API for GStreamer to stream directly from the camera CSI requires that X11 is disabled, i.e. if it connects to an X11 socket for display it will crash. Therein, although you can still access over SSH with X11 enabled, ensure that you add `DEVICE=:0` before running anything that uses the GStreamer backend. This is only a concern when *accessing a Jetson Nano over SSH*, if you are locally accessing you shouldn't run into problems.
 
 ### Calibrating Camera
 
