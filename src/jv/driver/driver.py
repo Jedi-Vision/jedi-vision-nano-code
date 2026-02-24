@@ -112,7 +112,7 @@ class Driver:
         sys_mgmt.logMetric("frame.number", frame_number)
         sys_mgmt.logMetric("frame.timestamp_ms", timestamp_ms)
 
-        objects = self.env_model.run(frame, show_det=self.show_det, **object_kwargs)
+        objects = self.env_model.run(frame[0], show_det=self.show_det, **object_kwargs)
 
         # Log object detection results
         sys_mgmt.logMetric("objects.detected_count", len(objects))
@@ -122,7 +122,7 @@ class Driver:
             if self.binocular:
                 depth = None
             else:  # use monocular depth model
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
+                frame = cv2.cvtColor(frame[0], cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
                 depth = self.scene_model.infer_video_depth_one(
                     frame,
                     input_size=518,

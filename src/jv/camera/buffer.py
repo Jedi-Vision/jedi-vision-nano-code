@@ -155,7 +155,7 @@ class FrameBuffer:
                 self.q.get(timeout=0.001)  # Remove the oldest frame to make space
 
             # Add frame to the queue
-            self.q.put((frame, frame_count, timestamp_ms), timeout=0.001)
+            self.q.put(((frame,), frame_count, timestamp_ms), timeout=0.001)
 
     def get(self):
         """
