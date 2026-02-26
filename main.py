@@ -30,18 +30,38 @@ with open(args.config) as f:
 
 driver_kwargs = config['driver']
 object_kwargs = config['object']
-depth_kwargs = config['depth']
+
+bino: bool = driver_kwargs['binocular']
+
+if bino:
+    depth_kwargs = config['stereo']
+else:
+    depth_kwargs = config['mono']
+
 gstreamer_kwargs = config['gstreamer']
 
-for key, value in extra_args.items():
-    if key in driver_kwargs:
-        driver_kwargs[key] = value
-    elif key in object_kwargs:
-        object_kwargs[key] = value
-    elif key in depth_kwargs:
-        depth_kwargs[key] = value
-    elif key in gstreamer_kwargs:
-        gstreamer_kwargs[key] = value
 
-driver = Driver(**driver_kwargs, gstreamer_kwargs=gstreamer_kwargs)
-driver.run(object_kwargs, depth_kwargs)
+def infer_type(value):
+    try:
+        return float(value)
+    except ValueError:
+        if value.lower() == "true":
+            return True
+        if value.lower() == "false":
+            return False
+    return value
+
+
+for key, value in extra_args.items():
+    typed_value = infer_type(value)
+    if key in driver_kwargs:
+        driver_kwargs[key] = typed_value
+    elif key in object_kwargs:
+        object_kwargs[key] = typed_value
+    elif key in depth_kwargs:
+        depth_kwargs[key] = typed_value
+    elif key in gstreamer_kwargs:
+        gstreamer_kwargs[key] = typed_value
+
+driver = Driver(**driver_kwargs, **(depth_kwargs if bino else {}), gstreamer_kwargs=gstreamer_kwargs)
+driver.run(object_kwargs, depth_kwargs if not bino else {})
