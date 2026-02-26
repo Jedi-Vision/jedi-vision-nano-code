@@ -1,6 +1,7 @@
 from jv.audio import ObjectBuffer
 from jv.representation import YoloObjectRepresentationModel
 from jv.scene.video_depth_anything_code.video_depth_stream import VideoDepthAnything, MODEL_CONFIGS
+from jv.scene.depth_estimator.depth_estimator import DepthEstimator
 from jv.camera import FrameBuffer
 from jv.representation.data import ObjectRepData
 from typing import Literal
@@ -83,6 +84,7 @@ class Driver:
             serial_type=serial_type
         )
 
+        
         self.depth = depth
         self.binocular = binocular
         self.scene_model = VideoDepthAnything(**MODEL_CONFIGS[vda_model_name])
@@ -96,6 +98,8 @@ class Driver:
             strict=True
         )
         self.scene_model = self.scene_model.to(torch.device(device)).eval()
+        
+        self.depth_estimator = DepthEstimator()
 
         self.device = device
         self.show_det = show_det
@@ -120,7 +124,7 @@ class Driver:
         if self.depth:
             # TODO create depth module classes, add block matching algo through cv2
             if self.binocular:
-                depth = None
+                depth = self.depth_estimator(frame)
             else:  # use monocular depth model
                 frame = cv2.cvtColor(frame[0], cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
                 depth = self.scene_model.infer_video_depth_one(
