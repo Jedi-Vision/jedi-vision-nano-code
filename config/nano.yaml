@@ -25,8 +25,14 @@ object:
     iou: 0.7
     half: false  # half-precision inference
 
-depth:
+mono:
     fp32: true  # fp32=False causes a black output and NaN values in model
+
+stereo:
+    num_disparities: 96  # 16 * 6, must be divisible by 16
+    block_size: 11  # odd number >= 5
+    min_disparity: 0.0
+    calibration_data: calibration_data.xml
 
 gstreamer:
     sensor_mode: 3  # (1280x720, 59.9999 fps)
