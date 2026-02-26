@@ -2,15 +2,15 @@ import cv2
 import numpy as np
 
 
-class DepthEstimator:
+class StereoDepthEstimator:
     def __init__(
         self,
         num_disparities: int = 16 * 6,
         block_size: int = 11,
-        min_disparity: int = 0
+        min_disparity: float = 0.,
     ):
         """
-        Stereo depth estimator using block matching.
+        Stereo depth estimator (along with 3D points) using block matching.
 
         Args:
             num_disparities: Must be divisible by 16
@@ -24,19 +24,11 @@ class DepthEstimator:
         )
 
         self.min_disparity = min_disparity
-        self.baseline = 0.06
-        self.focal_length = 700
 
-    def __call__(self, frame):
-        """
-        Computes depth from binocular frames.
+    def __call__(self, frame, Q):
+        return self.run(frame, Q)
 
-        Args:
-            frame: ((left_img, right_img), frame_number, timestamp)
-
-        Returns:
-            depth map (H x W numpy array)
-        """
+    def calc_disparity(self, frame: tuple[np.ndarray, np.ndarray]) -> np.ndarray:
 
         left_img, right_img = frame
 
@@ -47,12 +39,28 @@ class DepthEstimator:
         # Compute disparity
         disparity = self.stereo.compute(left_gray, right_gray)
 
-        # Normalize disparity
-        disparity = disparity.astype(np.float32) / 16.0
+        # Disparity is scaled by 16 (fixed-point) in OpenCV StereoBM, so unscale it
+        disparity = disparity.astype(cv2.CV_32F) / 16.0
 
         # Replace invalid disparities
-        disparity[disparity <= 0] = 0.1
+        disparity[disparity <= self.min_disparity] = self.min_disparity
 
-        depth = (self.focal_length * self.baseline) / disparity
+        return disparity
 
-        return depth
+    def run(self, frame: tuple[np.ndarray, np.ndarray], Q: np.ndarray):
+        """
+        Computes real world (X,Y,depth) coordinates from binocular frames, each
+        coordinate corresponds to a (h,w) coordinate pair in left frame.
+
+        Args:
+            frame: (left_img, right_img)
+            Q: Disparity-to-depth mapping matrix from rectification.
+
+        Returns:
+            3D point array (H x W x (X, Y, Z) numpy array)
+        """
+
+        disparity = self.calc_disparity(frame)
+        points_3D = cv2.reprojectImageTo3D(disparity, Q)
+
+        return points_3D
