@@ -1,7 +1,7 @@
 from jv.audio import ObjectBuffer
 from jv.representation import YoloObjectRepresentationModel
-from jv.scene.video_depth_anything_code.video_depth_stream import VideoDepthAnything, MODEL_CONFIGS
-from jv.scene.depth_estimator.depth_estimator import StereoDepthEstimator
+from jv.scene import VideoDepthAnything, MODEL_CONFIGS
+from jv.scene import StereoDepthEstimator
 from jv.rectification import Rectifier
 from jv.camera import FrameBuffer
 from jv.representation.data import ObjectRepData
