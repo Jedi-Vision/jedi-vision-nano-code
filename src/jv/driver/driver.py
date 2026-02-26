@@ -1,7 +1,8 @@
 from jv.audio import ObjectBuffer
 from jv.representation import YoloObjectRepresentationModel
 from jv.scene.video_depth_anything_code.video_depth_stream import VideoDepthAnything, MODEL_CONFIGS
-from jv.scene.depth_estimator.depth_estimator import DepthEstimator
+from jv.scene.depth_estimator.depth_estimator import StereoDepthEstimator
+from jv.rectification import Rectifier
 from jv.camera import FrameBuffer
 from jv.representation.data import ObjectRepData
 from typing import Literal
@@ -10,8 +11,6 @@ import cv2
 import time
 
 from jv.management import SystemManagement, log_block
-
-
 sys_mgmt = SystemManagement()
 
 
@@ -36,6 +35,11 @@ class Driver:
         show_det: bool = False,
         depth: bool = True,
         metric: bool = False,
+        num_disparities: int = 16 * 6,
+        block_size: int = 11,
+        min_disparity: float = 0.,
+        normalize_depth: bool = False,
+        calibration_data: str = "calibration_data.xml",
         gstreamer_kwargs: dict = {}
     ) -> None:
         """
@@ -84,9 +88,10 @@ class Driver:
             serial_type=serial_type
         )
 
-        
         self.depth = depth
         self.binocular = binocular
+
+        # Monocular depth
         self.scene_model = VideoDepthAnything(**MODEL_CONFIGS[vda_model_name])
         checkpoint_name = 'metric_video_depth_anything' if metric else 'video_depth_anything'
         self.scene_model.load_state_dict(
@@ -98,8 +103,28 @@ class Driver:
             strict=True
         )
         self.scene_model = self.scene_model.to(torch.device(device)).eval()
-        
-        self.depth_estimator = DepthEstimator()
+
+        # Binocular depth
+        def load_calibration_data(filename):
+            cv_file = cv2.FileStorage(filename, cv2.FILE_STORAGE_READ)
+            mtx1 = cv_file.getNode("mtx1").mat()
+            dist1 = cv_file.getNode("dist1").mat()
+            mtx2 = cv_file.getNode("mtx2").mat()
+            dist2 = cv_file.getNode("dist2").mat()
+            R = cv_file.getNode("R").mat()
+            T = cv_file.getNode("T").mat()
+            cv_file.release()
+            return mtx1, dist1, mtx2, dist2, R, T
+        self.depth_estimator = StereoDepthEstimator(
+            num_disparities=num_disparities,
+            block_size=block_size,
+            min_disparity=min_disparity
+        )
+        if self.binocular:
+            self.rectifier = Rectifier(
+                calibration_data=load_calibration_data(calibration_data),
+                img_size=(gstreamer_kwargs['display_height'], gstreamer_kwargs['display_width']),
+            )
 
         self.device = device
         self.show_det = show_det
@@ -116,16 +141,34 @@ class Driver:
         sys_mgmt.logMetric("frame.number", frame_number)
         sys_mgmt.logMetric("frame.timestamp_ms", timestamp_ms)
 
+        # If we are using binocular images for depth, we need to ensure that detection
+        # is done on rectified image pairs, so that we can then map the depth calculated
+        # for rectified images to the corresponding objects given the rectified (x,y)
+        # coordinates
+        if self.binocular:
+            frame = self.rectifier.rectify(frame)
+
         objects = self.env_model.run(frame[0], show_det=self.show_det, **object_kwargs)
 
         # Log object detection results
         sys_mgmt.logMetric("objects.detected_count", len(objects))
 
         if self.depth:
-            # TODO create depth module classes, add block matching algo through cv2
             if self.binocular:
-                depth = self.depth_estimator(frame)
-            else:  # use monocular depth model
+                # If we are using binocular depth estimation, then we need to convert the
+                # (x, y, d) triplet into real world (X, Y, Z) coordinates according to the
+                # 'Q' matrix given by rectifification.
+                depth = self.depth_estimator.run(
+                    frame,
+                    self.rectifier.Q
+                )
+                # For each object from the 2d (x,y) coordinate we get the 3d (X,Y,Z)
+                for obj in objects:
+                    x, y = obj.x_2d, obj.y_2d
+                    obj.depth = float(depth[y][x][0])
+                    obj.x_3d, obj.y_3d = float(depth[y][x][1]), float(depth[y][x][2])
+
+            else:  # Use monocular depth model
                 frame = cv2.cvtColor(frame[0], cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
                 depth = self.scene_model.infer_video_depth_one(
                     frame,
@@ -134,10 +177,9 @@ class Driver:
                     **depth_kwargs
                 )  # fp32=False causes a black output and NaN values in model
 
-            # Add depth information to objects
-            depth = torch.tensor(depth)
-            for obj in objects:
-                obj.depth = depth[int(obj.y_2d)][int(obj.x_2d)].item()
+                # Add depth information to objects
+                for obj in objects:
+                    obj.depth = float(depth[obj.y_2d][obj.x_2d])
 
             # Log depth statistics
             sys_mgmt.logMetric("depth.min", depth.min().item())  # TODO Review these metrics
