@@ -313,7 +313,7 @@ class YoloObjectRepresentationModel(AbstractModelClass):
             for box, object_id, label_id in zip(boxes, object_ids, labels):
                 x, y, _, _ = box
                 track = self.track_history[object_id]
-                track.append((float(x), float(y)))
+                track.append((int(x), int(y)))
 
                 if len(track) > self.retain_frames:  # retain track for only 30 frames
                     track.pop(0)
@@ -322,8 +322,10 @@ class YoloObjectRepresentationModel(AbstractModelClass):
                     ObjectCoordData(
                         id=object_id,
                         label=label_id,
-                        x_2d=float(x),
-                        y_2d=float(y),
+                        x_2d=int(x),  # closest pixel to center
+                        y_2d=int(y),  # closest pixel to center
+                        x_3d=-1,
+                        y_3d=-1,
                         depth=-1
                     )
                 )
