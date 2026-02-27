@@ -33,12 +33,14 @@ stereo:
     block_size: 11  # odd number >= 5
     min_disparity: 0.0
     calibration_data: camera_calibration.yaml
+    left_sensor_id: examples/videos/left.mp4  # if set to string then can open filepath
+    right_sensor_id: examples/videos/right.mp4  # if set to string then can ope filepath
 
 gstreamer:
     sensor_mode: 3  # (1280x720, 59.9999 fps)
     capture_width: 1280
     capture_height: 720
-    display_width: 540
-    display_height: 960
+    display_width: 1280
+    display_height: 720
     framerate: 30
-    flip_method: 0
+    flip_method: 2

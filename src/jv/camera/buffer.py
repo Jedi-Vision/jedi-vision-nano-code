@@ -11,6 +11,8 @@ class FrameBuffer:
         self,
         size: int = 0,
         camera_index: int | str = 0,
+        left_sensor_id: int | str = 0,
+        right_sensor_id: int | str = 1,
         warmup_frames: int = 30,
         frame_skip: int = 2,
         frame_rate: int = 30,
@@ -58,18 +60,24 @@ class FrameBuffer:
         self.thread = None
         self.binocular = binocular
         self.gstreamer_kwargs = gstreamer_kwargs
+        self.left_sensor_id = left_sensor_id
+        self.right_sensor_id = right_sensor_id
 
     def start(self):
         """Starts the frame capturing thread(s)."""
         if self.binocular:
-            self.capture_left = cv2.VideoCapture(
-                gstreamer_pipeline(sensor_id=0, **self.gstreamer_kwargs),
-                cv2.CAP_GSTREAMER
-            )
-            self.capture_right = cv2.VideoCapture(
-                gstreamer_pipeline(sensor_id=1, **self.gstreamer_kwargs),
-                cv2.CAP_GSTREAMER
-            )
+            if isinstance(self.left_sensor_id, str) or isinstance(self.right_sensor_id, str):
+                self.capture_left = cv2.VideoCapture(self.left_sensor_id)
+                self.capture_right = cv2.VideoCapture(self.right_sensor_id)
+            else:
+                self.capture_left = cv2.VideoCapture(
+                    gstreamer_pipeline(sensor_id=self.left_sensor_id, **self.gstreamer_kwargs),
+                    cv2.CAP_GSTREAMER
+                )
+                self.capture_right = cv2.VideoCapture(
+                    gstreamer_pipeline(sensor_id=self.right_sensor_id, **self.gstreamer_kwargs),
+                    cv2.CAP_GSTREAMER
+                )
 
             if not self.capture_left.isOpened() or not self.capture_right.isOpened():
                 raise RuntimeError("Failed to open one or both cameras.")
