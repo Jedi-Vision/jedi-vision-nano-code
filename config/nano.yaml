@@ -29,7 +29,7 @@ mono:
     fp32: true  # fp32=False causes a black output and NaN values in model
 
 stereo:
-    use_sgbm: true  # true = StereoSGBM (more accurate, slower), false = StereoBM (faster, simpler)
+    method: sgbm  # options: sgbm (default, more accurate, slower), bm (faster, simpler)
     num_disparities: 128  # max disparity - min disparity, must be divisible by 16
     block_size: 5  # matched block size, odd number >= 1, typically 3-11
     min_disparity: 0  # min disparity value, adjust if rectification shifts images

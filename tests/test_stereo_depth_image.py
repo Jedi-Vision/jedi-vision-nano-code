@@ -41,7 +41,7 @@ import matplotlib.pyplot as plt
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.join(REPO_ROOT, "src"))
 
-from jv.scene import StereoDepthEstimator  # noqa: E402
+from jv.scene import SGBMStereoDepthEstimator  # noqa: E402
 from jv.rectification import Rectifier  # noqa: E402
 
 # ---------------------------------------------------------------------------
@@ -389,44 +389,44 @@ def visualize_results(
     plt.show()
 
     # ── 5. 3-D point cloud scatter plot ──────────────────────────────────
-    step = max(1, points_3D.shape[0] * points_3D.shape[1] // 50_000)
-    pts = points_3D[::step, ::step].reshape(-1, 3)
-    disp_sub = disparity[::step, ::step].reshape(-1)
-    colours = cv2.cvtColor(left_img, cv2.COLOR_BGR2RGB)[::step, ::step].reshape(-1, 3) / 255.0
+    # step = max(1, points_3D.shape[0] * points_3D.shape[1] // 50_000)
+    # pts = points_3D[::step, ::step].reshape(-1, 3)
+    # disp_sub = disparity[::step, ::step].reshape(-1)
+    # colours = cv2.cvtColor(left_img, cv2.COLOR_BGR2RGB)[::step, ::step].reshape(-1, 3) / 255.0
 
-    # Only keep pixels with meaningful disparity (filters near-zero junk)
-    mask = (
-        (disp_sub > min_disparity)
-        & (np.abs(pts[:, 2]) > 0)
-        & np.isfinite(pts).all(axis=1)
-    )
-    pts = pts[mask]
-    colours = colours[mask]
+    # # Only keep pixels with meaningful disparity (filters near-zero junk)
+    # mask = (
+    #     (disp_sub > min_disparity)
+    #     & (np.abs(pts[:, 2]) > 0)
+    #     & np.isfinite(pts).all(axis=1)
+    # )
+    # pts = pts[mask]
+    # colours = colours[mask]
 
-    if len(pts) == 0:
-        print("No valid 3D points to plot -- skipping point cloud.")
-        return
+    # if len(pts) == 0:
+    #     print("No valid 3D points to plot -- skipping point cloud.")
+    #     return
 
-    # Clip depth outliers so the cloud isn't dominated by extreme points
-    z_abs = np.abs(pts[:, 2])
-    z_lo, z_hi = np.percentile(z_abs, [2, 98])
-    inlier = (z_abs >= z_lo) & (z_abs <= z_hi)
-    pts = pts[inlier]
-    colours = colours[inlier]
+    # # Clip depth outliers so the cloud isn't dominated by extreme points
+    # z_abs = np.abs(pts[:, 2])
+    # z_lo, z_hi = np.percentile(z_abs, [2, 98])
+    # inlier = (z_abs >= z_lo) & (z_abs <= z_hi)
+    # pts = pts[inlier]
+    # colours = colours[inlier]
 
-    fig3d = plt.figure(figsize=(12, 9))
-    ax3d = fig3d.add_subplot(111, projection="3d")
-    ax3d.scatter(pts[:, 0], pts[:, 1], pts[:, 2],
-                 c=colours, s=0.3, marker=".")
-    ax3d.set_xlabel("X")
-    ax3d.set_ylabel("Y")
-    ax3d.set_zlabel("Z (depth)")
-    ax3d.set_title("3D Point Cloud")
-    ax3d.invert_yaxis()
-    plt.tight_layout()
-    plt.savefig(os.path.join(REPO_ROOT, "output", "stereo_point_cloud.png"), dpi=150)
-    print("Saved stereo_point_cloud.png to output/")
-    plt.show()
+    # fig3d = plt.figure(figsize=(12, 9))
+    # ax3d = fig3d.add_subplot(111, projection="3d")
+    # ax3d.scatter(pts[:, 0], pts[:, 1], pts[:, 2],
+    #              c=colours, s=0.3, marker=".")
+    # ax3d.set_xlabel("X")
+    # ax3d.set_ylabel("Y")
+    # ax3d.set_zlabel("Z (depth)")
+    # ax3d.set_title("3D Point Cloud")
+    # ax3d.invert_yaxis()
+    # plt.tight_layout()
+    # plt.savefig(os.path.join(REPO_ROOT, "output", "stereo_point_cloud.png"), dpi=150)
+    # print("Saved stereo_point_cloud.png to output/")
+    # plt.show()
 
 
 # ---------------------------------------------------------------------------
@@ -537,7 +537,7 @@ def main():
     print(f"Q matrix:\n{Q}\n")
 
     # ── Run StereoDepthEstimator ──────────────────────────────────────────
-    estimator = StereoDepthEstimator(
+    estimator = SGBMStereoDepthEstimator(
         num_disparities=args.num_disparities,
         block_size=args.block_size
     )
