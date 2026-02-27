@@ -38,7 +38,7 @@ class Driver:
         num_disparities: int = 16 * 6,
         block_size: int = 11,
         min_disparity: float = 0.,
-        calibration_data: str = "calibration_data.xml",
+        calibration_data: str = "calibration_data.yaml",
         gstreamer_kwargs: dict = {}
     ) -> None:
         """
@@ -187,12 +187,20 @@ class Driver:
 
             # Visualize depth map if wanted
             if self.show_det:
-                colormap = self.scene_model.colormap
-                # Normalize
-                color_depth = ((depth - depth.min()) / (depth.max() - depth.min() + 1e-8)*255).to(torch.uint8)
-                color_depth = colormap[color_depth]
-                cv2.imshow("msg.mask", color_depth)
-                cv2.waitKey(1)
+                if self.binocular:
+                    # Visualize binocular depth map
+                    depth_map = depth[..., 3]  # Assuming depth[..., 0] is the disparity/depth channel
+                    norm_depth = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)
+                    color_depth = cv2.applyColorMap(norm_depth.astype('uint8'), cv2.COLORMAP_JET)
+                    cv2.imshow("binocular_depth", color_depth)
+                    cv2.waitKey(1)
+                else:
+                    colormap = self.scene_model.colormap
+                    # Normalize
+                    color_depth = ((depth - depth.min()) / (depth.max() - depth.min() + 1e-8)*255).to(torch.uint8)
+                    color_depth = colormap[color_depth]
+                    cv2.imshow("msg.mask", color_depth)
+                    cv2.waitKey(1)
 
         return ObjectRepData(
             frame_number=frame_number,
