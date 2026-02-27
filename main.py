@@ -43,7 +43,10 @@ gstreamer_kwargs = config['gstreamer']
 
 def infer_type(value):
     try:
-        return float(value)
+        if '.' in value:
+            return float(value)
+        else:
+            return int(value)
     except ValueError:
         if value.lower() == "true":
             return True
@@ -63,5 +66,9 @@ for key, value in extra_args.items():
     elif key in gstreamer_kwargs:
         gstreamer_kwargs[key] = typed_value
 
-driver = Driver(**driver_kwargs, **(depth_kwargs if bino else {}), gstreamer_kwargs=gstreamer_kwargs)
-driver.run(object_kwargs, depth_kwargs if not bino else {})
+driver = Driver(
+    **driver_kwargs,
+    object_kwargs=object_kwargs,
+    depth_kwargs=depth_kwargs,
+    gstreamer_kwargs=gstreamer_kwargs
+).run()
