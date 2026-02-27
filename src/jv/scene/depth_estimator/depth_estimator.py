@@ -40,7 +40,7 @@ class StereoDepthEstimator:
         disparity = self.stereo.compute(left_gray, right_gray)
 
         # Disparity is scaled by 16 (fixed-point) in OpenCV StereoBM, so unscale it
-        disparity = disparity.astype(float) / 16.0
+        disparity = disparity.astype(np.float32) / 16.0
 
         # Replace invalid disparities
         disparity[disparity <= self.min_disparity] = self.min_disparity
