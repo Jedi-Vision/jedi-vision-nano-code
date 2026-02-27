@@ -13,7 +13,7 @@ Modified on Thursday Feb 26 2026
 # Import required modules
 import cv2
 import numpy as np
-from ..jv.camera import FrameBuffer
+from jv.camera import FrameBuffer
 
 
 def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,chessboard_grid_size=(9,6),number_of_frames=50):

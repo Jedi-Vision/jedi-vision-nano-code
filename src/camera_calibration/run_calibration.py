@@ -1,5 +1,5 @@
-from .calibrate import stereoCalibrateCamera
-from ..jv.camera import FrameBuffer
+from calibrate import stereoCalibrateCamera
+from jv.camera import FrameBuffer
 
 BOX_SIZE = 25  # mm
 GRID_SIZE = (11, 8)  # width times height
