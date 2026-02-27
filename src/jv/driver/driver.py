@@ -9,6 +9,8 @@ from typing import Literal
 import torch
 import cv2
 import time
+import numpy as np
+import matplotlib.pyplot as plt
 
 from jv.management import SystemManagement, log_block
 sys_mgmt = SystemManagement()
@@ -50,6 +52,8 @@ class Driver:
         speckle_window_size: int = 100,
         speckle_range: int = 2,
         max_depth: float = 100.,
+        left_sensor_id: int | str = 0,
+        right_sensor_id: int | str = 1,
         calibration_data: str = "camera_calibration.yaml",
         gstreamer_kwargs: dict = {}
     ) -> None:
@@ -112,6 +116,8 @@ class Driver:
         self.frame_buffer = FrameBuffer(
             size=frame_buffer_size,
             camera_index=camera_index,
+            left_sensor_id=left_sensor_id,
+            right_sensor_id=right_sensor_id,
             warmup_frames=warmup_frames,
             frame_skip=frame_skip,
             frame_rate=frame_rate,
@@ -175,7 +181,7 @@ class Driver:
             )
             self.rectifier = Rectifier(
                 calibration_data=load_calibration_data(calibration_data),
-                img_size=(gstreamer_kwargs['display_height'], gstreamer_kwargs['display_width']),
+                img_size=(gstreamer_kwargs['display_width'], gstreamer_kwargs['display_height']),
             )
 
         self.device = device
@@ -218,9 +224,9 @@ class Driver:
                 # For each object from the 2d (x,y) coordinate we get the 3d (X,Y,Z)
                 # convert to meters as well
                 for obj in objects:
-                    x, y = obj.x_2d, obj.y_2d
+                    x, y = int(obj.x), int(obj.y)
                     obj.depth = float(depth[y][x][2]) * DEPTH_CONV
-                    obj.x_3d, obj.y_3d = float(depth[y][x][0]) * DEPTH_CONV, float(depth[y][x][1]) * DEPTH_CONV
+                    obj.x, obj.y = float(depth[y][x][0]) * DEPTH_CONV, float(depth[y][x][1]) * DEPTH_CONV
 
             else:  # Use monocular depth model
                 frame = cv2.cvtColor(frame[0], cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
@@ -233,7 +239,7 @@ class Driver:
 
                 # Add depth information to objects
                 for obj in objects:
-                    obj.depth = float(depth[obj.y_2d][obj.x_2d])
+                    obj.depth = float(depth[obj.y][obj.x])
 
             # Log depth statistics
             sys_mgmt.logMetric("depth.min", depth.min().item())  # TODO Review these metrics
@@ -254,6 +260,7 @@ class Driver:
                     color_disparity = cv2.applyColorMap(norm_disparity.astype('uint8'), cv2.COLORMAP_JET)
                     cv2.imshow("binocular_disparity", color_disparity)
                     cv2.waitKey(1)
+                    # visualize_results(frame[0], frame[1], disparity, depth)
                 else:
                     colormap = self.scene_model.colormap
                     # Normalize
@@ -320,3 +327,70 @@ class Driver:
                 self.object_buffer.stop()
 
                 exit(0)
+
+
+def visualize_results(
+    left_img: np.ndarray,
+    right_img: np.ndarray,
+    disparity: np.ndarray,
+    points_3D: np.ndarray,
+):
+    """Show left/right pair, disparity with colorbar, depth with colorbar,
+    and a 3-D point cloud.
+
+    Note: relative depth (1/d) and metric depth (f·B/d) differ only by the
+    constant factor f·B.  After normalisation to a colour range they look
+    *identical*, so we show only one depth panel — with a colorbar carrying
+    actual values so you can read real numbers off it.
+    """
+
+    min_disparity = 0.0
+    valid_disp = disparity > min_disparity
+
+    # ── 1. Disparity (float, actual values) ───────────────────────────────
+    disp_vis = disparity.copy().astype(np.float64)
+    disp_vis[~valid_disp] = np.nan
+    if valid_disp.any():
+        p_lo, p_hi = np.percentile(disparity[valid_disp], [2, 98])
+        disp_vis = np.clip(disp_vis, p_lo, p_hi)
+    else:
+        p_lo, p_hi = 0, 1
+
+    # ── 2. Depth (float, actual values) ───────────────────────────────────
+    depth_z = np.abs(points_3D[..., 2].copy())
+    depth_vis = depth_z.copy().astype(np.float64)
+    depth_vis[~valid_disp] = np.nan
+    valid_depth = (depth_z > 0) & valid_disp
+    if valid_depth.any():
+        d_lo, d_hi = np.percentile(depth_z[valid_depth], [2, 98])
+        depth_vis = np.clip(depth_vis, d_lo, d_hi)
+    else:
+        d_lo, d_hi = 0, 1
+
+    # ── 3. Matplotlib figure ──────────────────────────────────────────────
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+    # Top-left: left image
+    axes[0, 0].imshow(cv2.cvtColor(left_img, cv2.COLOR_BGR2RGB))
+    axes[0, 0].set_title("Left image")
+    axes[0, 0].axis("off")
+
+    # Top-right: right image
+    axes[0, 1].imshow(cv2.cvtColor(right_img, cv2.COLOR_BGR2RGB))
+    axes[0, 1].set_title("Right image")
+    axes[0, 1].axis("off")
+
+    # Bottom-left: disparity with colorbar (actual pixel values)
+    im_disp = axes[1, 0].imshow(disp_vis, cmap="jet", vmin=p_lo, vmax=p_hi)
+    axes[1, 0].set_title("Disparity  (pixels)")
+    axes[1, 0].axis("off")
+    fig.colorbar(im_disp, ax=axes[1, 0], fraction=0.046, pad=0.04)
+
+    # Bottom-right: depth with colorbar (actual world-unit values)
+    im_depth = axes[1, 1].imshow(depth_vis, cmap="magma", vmin=d_lo, vmax=d_hi)
+    axes[1, 1].set_title("depth")
+    axes[1, 1].axis("off")
+    fig.colorbar(im_depth, ax=axes[1, 1], fraction=0.046, pad=0.04)
+
+    plt.tight_layout()
+    plt.show()

@@ -15,11 +15,10 @@ import torch
 class ObjectCoordData:
     id: int
     label: int
-    x_2d: int
-    y_2d: int
     # Coordinate system follows OpenCV convention: X right, Y down, Z forward
-    x_3d: float  # X coordinate in meters (or whatever baseline unit was)
-    y_3d: float  # Y coordinate in meters (or whatever baseline unit was)
+    # in meters (or whatever baseline/calibration unit was)
+    x: float
+    y: float
     depth: float  # Depth in meters (or whatever baseline unit was)
 
 
@@ -36,10 +35,8 @@ class ObjectRepData:
             "objects": [
                 {
                     "id": obj.id,
-                    "x_2d": obj.x_2d,
-                    "y_2d": obj.y_2d,
-                    "x_3d": obj.x_3d,
-                    "y_3d": obj.y_3d,
+                    "x": obj.x,
+                    "y": obj.y,
                     "depth": obj.depth,
                 }
                 for obj in self.objects

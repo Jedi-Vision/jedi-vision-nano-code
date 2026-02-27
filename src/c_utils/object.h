@@ -10,8 +10,8 @@ extern "C" {
 typedef struct ObjectCoordData {
     int id;
     int label;
-    float x_2d;   // Normalized [0, 1]
-    float y_2d;   // Normalized [0, 1]
+    float x;   // in meters
+    float y;   // in meters
     float depth;  // Depth in meters
 } ObjectCoordData;
 

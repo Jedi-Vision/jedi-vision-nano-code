@@ -322,10 +322,8 @@ class YoloObjectRepresentationModel(AbstractModelClass):
                     ObjectCoordData(
                         id=object_id,
                         label=label_id,
-                        x_2d=int(x),  # closest pixel to center
-                        y_2d=int(y),  # closest pixel to center
-                        x_3d=-1,
-                        y_3d=-1,
+                        x=x.item(),  # closest pixel to center
+                        y=y.item(),  # closest pixel to center
                         depth=-1
                     )
                 )
