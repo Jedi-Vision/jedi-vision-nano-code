@@ -45,6 +45,8 @@ class StereoDepthEstimator:
         # Replace invalid disparities
         disparity[disparity <= self.min_disparity] = self.min_disparity
 
+        assert not np.isnan(disparity).any(), "Disparity map contains NaN values"
+
         return disparity
 
     def run(self, frame: tuple[np.ndarray, np.ndarray], Q: np.ndarray):

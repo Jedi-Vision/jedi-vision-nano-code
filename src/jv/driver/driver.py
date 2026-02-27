@@ -161,6 +161,7 @@ class Driver:
                     frame,
                     self.rectifier.Q
                 )
+                assert not torch.isnan(torch.tensor(depth)).any(), "NaN values found in depth map"
                 # For each object from the 2d (x,y) coordinate we get the 3d (X,Y,Z)
                 for obj in objects:
                     x, y = obj.x_2d, obj.y_2d
