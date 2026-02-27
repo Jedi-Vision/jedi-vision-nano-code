@@ -216,3 +216,7 @@ examples/videos/*.mp4
 checkpoints/*
 *.mov
 output/*
+
+examples/stereo/*
+!examples/stereo/Motorcycle-perfect
+!examples/stereo/Playtable-perfect
