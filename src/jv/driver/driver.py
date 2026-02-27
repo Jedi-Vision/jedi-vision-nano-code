@@ -38,7 +38,6 @@ class Driver:
         num_disparities: int = 16 * 6,
         block_size: int = 11,
         min_disparity: float = 0.,
-        normalize_depth: bool = False,
         calibration_data: str = "calibration_data.xml",
         gstreamer_kwargs: dict = {}
     ) -> None:
