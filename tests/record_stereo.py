@@ -22,6 +22,8 @@ def record_binocular(frame_rate, frame_skip, buffer_size, warmup, gstreamer_kwar
     print()
 
     fb = FrameBuffer(
+        left_sensor_id=1,
+        right_sensor_id=0,
         size=buffer_size,
         warmup_frames=warmup,
         frame_skip=frame_skip,

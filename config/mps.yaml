@@ -2,7 +2,7 @@
 
 driver:
     device: mps  # cpu, mps, or cuda
-    output_to: none  # socket, file, or none
+    output_to: socket  # socket, file, or none
     serial_type: struct  # struct or protobuf
     object_model_name: yolo11
     vda_model_name: vits
@@ -13,7 +13,7 @@ driver:
     warmup_frames: 30
     camera_index: 0
     binocular: true
-    frame_skip: 0
+    frame_skip: 2
     frame_rate: 30
     show_det: true
     depth: true
