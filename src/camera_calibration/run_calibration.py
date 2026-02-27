@@ -2,7 +2,7 @@ from calibrate import stereoCalibrateCamera
 from jv.camera import FrameBuffer
 
 BOX_SIZE = 25  # mm
-GRID_SIZE = (11, 8)  # width times height
+GRID_SIZE = (10, 7)  # width times height, internal corners not true pattern size!
 
 gstreamer_kwargs = {
     "sensor_mode": 3,

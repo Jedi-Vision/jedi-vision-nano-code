@@ -101,7 +101,7 @@ def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,che
         # If desired number of corners can be detected then,
         # refine the pixel coordinates and display
         # them on the images of checker board
-        if ret1 == True and ret2 == True :
+        if ret1 == True and ret2 == True:
             threedpoints.append(objectp3d)
       
             # Refining pixel coordinates
@@ -127,6 +127,8 @@ def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,che
             #cv2.imshow('c2_corners',image2)
             cv2.imshow("img1 corners - img2 corners",cv2.hconcat([cv2.resize(image1, (0,0), fx=0.6, fy=0.6) ,cv2.resize(image2, (0,0), fx=0.6, fy=0.6)]))
             cv2.waitKey(10)
+        else:
+            print("couldn't find corners")
       
     cv2.destroyAllWindows()
     
