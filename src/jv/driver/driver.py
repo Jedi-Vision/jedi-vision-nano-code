@@ -38,7 +38,7 @@ class Driver:
         num_disparities: int = 16 * 6,
         block_size: int = 11,
         min_disparity: float = 0.,
-        calibration_data: str = "calibration_data.yaml",
+        calibration_data: str = "camera_calibration.yaml",
         gstreamer_kwargs: dict = {}
     ) -> None:
         """
