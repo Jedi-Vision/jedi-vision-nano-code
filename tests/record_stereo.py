@@ -86,7 +86,7 @@ def main():
     parser.add_argument("--display-width", type=int, default=1280, help="GStreamer display width (default: 1280)")
     parser.add_argument("--display-height", type=int, default=720, help="GStreamer display height (default: 720)")
     parser.add_argument("--sensor-mode", type=int, default=3, help="GStreamer sensor mode (default: 3)")
-    parser.add_argument("--flip-method", type=int, default=0, help="GStreamer flip method (default: 0)")
+    parser.add_argument("--flip-method", type=int, default=2, help="GStreamer flip method (default: 0)")
     parser.add_argument("--left-path", type=str, default="left.mp4", help="Output path for left video")
     parser.add_argument("--right-path", type=str, default="right.mp4", help="Output path for right video")
     parser.add_argument("--max-frames", type=int, default=None, help="Maximum number of frames to record (default: unlimited)")
