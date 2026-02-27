@@ -14,6 +14,9 @@ from jv.management import SystemManagement, log_block
 sys_mgmt = SystemManagement()
 
 
+DEPTH_CONV = (1/0.001)  # 1mm per 0.001 meter for stereo depth conversion
+
+
 class Driver:
 
     def __init__(
@@ -35,9 +38,18 @@ class Driver:
         show_det: bool = False,
         depth: bool = True,
         metric: bool = False,
+        use_sgbm: bool = True,
         num_disparities: int = 16 * 6,
         block_size: int = 11,
-        min_disparity: float = 0.,
+        min_disparity: int = 0,
+        P1: int | None = None,
+        P2: int | None = None,
+        disp12_max_diff: int = 1,
+        pre_filter_cap: int = 0,
+        uniqueness_ratio: int = 5,
+        speckle_window_size: int = 100,
+        speckle_range: int = 2,
+        max_depth: float = 100.,
         calibration_data: str = "camera_calibration.yaml",
         gstreamer_kwargs: dict = {}
     ) -> None:
@@ -62,6 +74,38 @@ class Driver:
             show_det (bool, optional): Whether to display detection results. Defaults to False.
             depth (bool, optional): Whether to enable depth estimation. Defaults to True.
             metric (bool, optional): Whether to use metric depth estimation model. Defaults to False.
+            use_sgbm (bool, optional): If True, use StereoSGBM (more accurate, slower). If False,
+                use StereoBM (faster, simpler). Defaults to True.
+            num_disparities: Maximum disparity minus minimum disparity. The value is always greater
+                than zero. Must be divisible by 16. Determines the resolution of your stereo / depth map.
+            block_size: Matched block size. It must be an odd number >=1. Normally, it should be
+                somewhere in the 3 to 11 range.
+            min_disparity: Minimum possible disparity value. Normally, it is zero but sometimes
+                rectification algorithms can shift images, so this parameter needs to be adjusted
+                accordingly.
+            P1: The first parameter controlling the disparity smoothness. P1 is the penalty on the
+                disparity change by plus or minus 1 between neighbor pixels. Defaults to
+                8 * 1 * block_size^2.
+            P2: The second parameter controlling the disparity smoothness. The larger the values are,
+                the smoother the disparity is. P2 is the penalty on the disparity change by more than
+                1 between neighbor pixels. The algorithm requires P2 > P1. Defaults to
+                32 * 1 * block_size^2.
+            disp12_max_diff: Maximum allowed difference (in integer pixel units) in the left-right
+                disparity check. Set it to a non-positive value to disable the check.
+            pre_filter_cap: Truncation value for the prefiltered image pixels. The algorithm first
+                computes x-derivative at each pixel and clips its value by [-preFilterCap,
+                preFilterCap] interval. The result values are passed to the Birchfield-Tomasi pixel
+                cost function.
+            uniqueness_ratio: Margin in percentage by which the best (minimum) computed cost function
+                value should "win" the second best value to consider the found match correct.
+                Normally, a value within the 5-15 range is good enough.
+            speckle_window_size: Maximum size of smooth disparity regions to consider their noise
+                speckles and invalidate. Set it to 0 to disable speckle filtering. Otherwise, set it
+                somewhere in the 50-200 range.
+            speckle_range: Maximum disparity variation within each connected component. If you do
+                speckle filtering, set the parameter to a positive value, it will be implicitly
+                multiplied by 16. Normally, 1 or 2 is good enough.
+            max_depth: Maximum depth value (in mm) to keep. Points beyond this are zeroed out.
             gstreamer_args (dict, optional): GStreamer kwargs. See buffer.py for more information.
         """
 
@@ -115,9 +159,18 @@ class Driver:
             fs.release()
             return mtx1, dist1, mtx2, dist2, R, T
         self.depth_estimator = StereoDepthEstimator(
+            use_sgbm=use_sgbm,
             num_disparities=num_disparities,
             block_size=block_size,
-            min_disparity=min_disparity
+            min_disparity=min_disparity,
+            P1=P1,
+            P2=P2,
+            disp12_max_diff=disp12_max_diff,
+            pre_filter_cap=pre_filter_cap,
+            uniqueness_ratio=uniqueness_ratio,
+            speckle_window_size=speckle_window_size,
+            speckle_range=speckle_range,
+            max_depth=max_depth
         )
         if self.binocular:
             self.rectifier = Rectifier(
@@ -163,10 +216,11 @@ class Driver:
                 )
                 assert not torch.isinf(torch.tensor(depth)).any(), "Infinity found in depth map."
                 # For each object from the 2d (x,y) coordinate we get the 3d (X,Y,Z)
+                # convert to meters as well
                 for obj in objects:
                     x, y = obj.x_2d, obj.y_2d
-                    obj.depth = float(depth[y][x][0])
-                    obj.x_3d, obj.y_3d = float(depth[y][x][1]), float(depth[y][x][2])
+                    obj.depth = float(depth[y][x][0]) * DEPTH_CONV
+                    obj.x_3d, obj.y_3d = float(depth[y][x][1]) * DEPTH_CONV, float(depth[y][x][2]) * DEPTH_CONV
 
             else:  # Use monocular depth model
                 frame = cv2.cvtColor(frame[0], cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA

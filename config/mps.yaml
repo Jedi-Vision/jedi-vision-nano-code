@@ -12,7 +12,7 @@ driver:
     frame_buffer_size: 1
     warmup_frames: 30
     camera_index: 0
-    binocular: false
+    binocular: true
     frame_skip: 0
     frame_rate: 30
     show_det: true
@@ -29,12 +29,21 @@ mono:
     fp32: true  # fp32=False causes a black output and NaN values in model
 
 stereo:
-    num_disparities: 96  # 16 * 6, must be divisible by 16
-    block_size: 11  # odd number >= 5
-    min_disparity: 0.0
+    use_sgbm: true  # true = StereoSGBM (more accurate, slower), false = StereoBM (faster, simpler)
+    num_disparities: 128  # max disparity - min disparity, must be divisible by 16
+    block_size: 5  # matched block size, odd number >= 1, typically 3-11
+    min_disparity: 0  # min disparity value, adjust if rectification shifts images
+    # P1: null  # smoothness penalty for ±1 disparity change; defaults to 8*1*block_size^2
+    # P2: null  # smoothness penalty for >1 disparity change; defaults to 32*1*block_size^2, must be > P1
+    disp12_max_diff: 1  # max left-right disparity diff (pixels), non-positive to disable
+    pre_filter_cap: 0  # clips x-derivative to [-val, val] for Birchfield-Tomasi cost
+    uniqueness_ratio: 5  # min margin (%) best cost must win by, typically 5-15
+    speckle_window_size: 100  # max smooth region size for speckle filtering, 0 to disable, typically 50-200
+    speckle_range: 2  # max disparity variation in connected component, implicitly *16, typically 1-2
+    max_depth: 10000.0  # max depth (mm), points beyond are zeroed
     calibration_data: camera_calibration.yaml
     left_sensor_id: examples/videos/left.mp4  # if set to string then can open filepath
-    right_sensor_id: examples/videos/right.mp4  # if set to string then can ope filepath
+    right_sensor_id: examples/videos/right.mp4  # if set to string then can open filepath
 
 gstreamer:
     sensor_mode: 3  # (1280x720, 59.9999 fps)
