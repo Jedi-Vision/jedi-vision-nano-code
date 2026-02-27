@@ -170,7 +170,7 @@ class FrameBuffer:
             self.q.task_done()
             return frame
         except Empty as e:
-            logging.warning(f"Frame buffer empty: {e}")
+            # logging.warning(f"Frame buffer empty: {e}")
             return None
 
 
