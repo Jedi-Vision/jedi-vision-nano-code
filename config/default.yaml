@@ -32,7 +32,7 @@ stereo:
     num_disparities: 96  # 16 * 6, must be divisible by 16
     block_size: 11  # odd number >= 5
     min_disparity: 0.0
-    calibration_data: calibration_data.xml
+    calibration_data: calibration_data.yaml
 
 gstreamer:
     sensor_mode: 3  # (1280x720, 59.9999 fps)
