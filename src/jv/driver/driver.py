@@ -105,14 +105,14 @@ class Driver:
 
         # Binocular depth
         def load_calibration_data(filename):
-            cv_file = cv2.FileStorage(filename, cv2.FILE_STORAGE_READ)
-            mtx1 = cv_file.getNode("mtx1").mat()
-            dist1 = cv_file.getNode("dist1").mat()
-            mtx2 = cv_file.getNode("mtx2").mat()
-            dist2 = cv_file.getNode("dist2").mat()
-            R = cv_file.getNode("R").mat()
-            T = cv_file.getNode("T").mat()
-            cv_file.release()
+            fs = cv2.FileStorage(filename, cv2.FILE_STORAGE_READ)
+            mtx1 = fs.getNode("mtx1").mat()
+            dist1 = fs.getNode("dist1").mat()
+            mtx2 = fs.getNode("mtx2").mat()
+            dist2 = fs.getNode("dist2").mat()
+            R = fs.getNode("R").mat()
+            T = fs.getNode("T").mat()
+            fs.release()
             return mtx1, dist1, mtx2, dist2, R, T
         self.depth_estimator = StereoDepthEstimator(
             num_disparities=num_disparities,
