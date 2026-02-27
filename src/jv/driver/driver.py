@@ -14,7 +14,7 @@ from jv.management import SystemManagement, log_block
 sys_mgmt = SystemManagement()
 
 
-DEPTH_CONV = (1/0.001)  # 1mm per 0.001 meter for stereo depth conversion
+DEPTH_CONV = 0.001  # 1mm per 0.001 meter for stereo depth conversion
 
 
 class Driver:
@@ -148,31 +148,31 @@ class Driver:
         self.scene_model = self.scene_model.to(torch.device(device)).eval()
 
         # Binocular depth
-        def load_calibration_data(filename):
-            fs = cv2.FileStorage(filename, cv2.FILE_STORAGE_READ)
-            mtx1 = fs.getNode("mtx1").mat()
-            dist1 = fs.getNode("dist1").mat()
-            mtx2 = fs.getNode("mtx2").mat()
-            dist2 = fs.getNode("dist2").mat()
-            R = fs.getNode("R").mat()
-            T = fs.getNode("T").mat()
-            fs.release()
-            return mtx1, dist1, mtx2, dist2, R, T
-        self.depth_estimator = StereoDepthEstimator(
-            use_sgbm=use_sgbm,
-            num_disparities=num_disparities,
-            block_size=block_size,
-            min_disparity=min_disparity,
-            P1=P1,
-            P2=P2,
-            disp12_max_diff=disp12_max_diff,
-            pre_filter_cap=pre_filter_cap,
-            uniqueness_ratio=uniqueness_ratio,
-            speckle_window_size=speckle_window_size,
-            speckle_range=speckle_range,
-            max_depth=max_depth
-        )
         if self.binocular:
+            def load_calibration_data(filename):
+                fs = cv2.FileStorage(filename, cv2.FILE_STORAGE_READ)
+                mtx1 = fs.getNode("mtx1").mat()
+                dist1 = fs.getNode("dist1").mat()
+                mtx2 = fs.getNode("mtx2").mat()
+                dist2 = fs.getNode("dist2").mat()
+                R = fs.getNode("R").mat()
+                T = fs.getNode("T").mat()
+                fs.release()
+                return mtx1, dist1, mtx2, dist2, R, T
+            self.depth_estimator = StereoDepthEstimator(
+                use_sgbm=use_sgbm,
+                num_disparities=num_disparities,
+                block_size=block_size,
+                min_disparity=min_disparity,
+                P1=P1,
+                P2=P2,
+                disp12_max_diff=disp12_max_diff,
+                pre_filter_cap=pre_filter_cap,
+                uniqueness_ratio=uniqueness_ratio,
+                speckle_window_size=speckle_window_size,
+                speckle_range=speckle_range,
+                max_depth=max_depth
+            )
             self.rectifier = Rectifier(
                 calibration_data=load_calibration_data(calibration_data),
                 img_size=(gstreamer_kwargs['display_height'], gstreamer_kwargs['display_width']),
