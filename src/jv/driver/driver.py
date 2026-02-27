@@ -219,8 +219,8 @@ class Driver:
                 # convert to meters as well
                 for obj in objects:
                     x, y = obj.x_2d, obj.y_2d
-                    obj.depth = float(depth[y][x][0]) * DEPTH_CONV
-                    obj.x_3d, obj.y_3d = float(depth[y][x][1]) * DEPTH_CONV, float(depth[y][x][2]) * DEPTH_CONV
+                    obj.depth = float(depth[y][x][2]) * DEPTH_CONV
+                    obj.x_3d, obj.y_3d = float(depth[y][x][0]) * DEPTH_CONV, float(depth[y][x][1]) * DEPTH_CONV
 
             else:  # Use monocular depth model
                 frame = cv2.cvtColor(frame[0], cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
@@ -244,13 +244,13 @@ class Driver:
             if self.show_det:
                 if self.binocular:
                     # Visualize binocular depth map
-                    depth_map = depth[..., 2]  # Assuming depth[..., 0] is the disparity/depth channel
-                    norm_depth = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)
+                    depth_map = depth[..., 2]
+                    norm_depth = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
                     color_depth = cv2.applyColorMap(norm_depth.astype('uint8'), cv2.COLORMAP_JET)
                     cv2.imshow("binocular_depth", color_depth)
                     cv2.waitKey(1)
                     # Visualize disparity map
-                    norm_disparity = cv2.normalize(disparity, None, 0, 255, cv2.NORM_MINMAX)
+                    norm_disparity = cv2.normalize(disparity, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
                     color_disparity = cv2.applyColorMap(norm_disparity.astype('uint8'), cv2.COLORMAP_JET)
                     cv2.imshow("binocular_disparity", color_disparity)
                     cv2.waitKey(1)
