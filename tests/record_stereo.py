@@ -6,7 +6,7 @@ from jv.camera import FrameBuffer
 
 def get_video_writer(filename, frame_shape, fps):
     height, width = frame_shape[:2]
-    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     return cv2.VideoWriter(filename, fourcc, fps, (width, height))
 
 
