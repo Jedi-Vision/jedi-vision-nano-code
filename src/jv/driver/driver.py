@@ -189,7 +189,7 @@ class Driver:
             if self.show_det:
                 if self.binocular:
                     # Visualize binocular depth map
-                    depth_map = depth[..., 3]  # Assuming depth[..., 0] is the disparity/depth channel
+                    depth_map = depth[..., 2]  # Assuming depth[..., 0] is the disparity/depth channel
                     norm_depth = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)
                     color_depth = cv2.applyColorMap(norm_depth.astype('uint8'), cv2.COLORMAP_JET)
                     cv2.imshow("binocular_depth", color_depth)
