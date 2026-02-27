@@ -13,7 +13,7 @@ driver:
     warmup_frames: 30
     camera_index: 0
     binocular: true
-    frame_skip: 2
+    frame_skip: 0
     frame_rate: 30
     show_det: true
     depth: true
