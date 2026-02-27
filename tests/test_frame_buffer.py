@@ -150,9 +150,9 @@ def main():
                         help="Frame rate (default: 30)")
     parser.add_argument("--frame-skip", type=int, default=0,
                         help="Number of frames to skip between captures (default: 0)")
-    parser.add_argument("--buffer-size", type=int, default=10,
+    parser.add_argument("--buffer-size", type=int, default=1,
                         help="Max frames in the queue (default: 10)")
-    parser.add_argument("--warmup", type=int, default=10,
+    parser.add_argument("--warmup", type=int, default=0,
                         help="Number of warmup frames before buffering (default: 10)")
 
     # GStreamer options (binocular only)
