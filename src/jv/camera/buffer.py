@@ -2,6 +2,7 @@ import cv2
 from queue import Queue, Empty
 import threading
 import time
+import logging
 
 
 class FrameBuffer:
@@ -169,7 +170,7 @@ class FrameBuffer:
             self.q.task_done()
             return frame
         except Empty as e:
-            print(f"Frame buffer empty: {e}")
+            logging.warning(f"Frame buffer empty: {e}")
             return None
 
 
