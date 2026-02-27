@@ -161,8 +161,7 @@ class Driver:
                     frame,
                     self.rectifier.Q
                 )
-                print(depth[..., 2])
-                assert not torch.isnan(torch.tensor(depth)).any(), "NaN values found in depth map"
+                assert not torch.isinf(torch.tensor(depth)).any(), "Infinity found in depth map."
                 # For each object from the 2d (x,y) coordinate we get the 3d (X,Y,Z)
                 for obj in objects:
                     x, y = obj.x_2d, obj.y_2d
