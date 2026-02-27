@@ -72,6 +72,7 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
         left_img, right_img = frame
         left_gray = cv2.cvtColor(left_img, cv2.COLOR_BGR2GRAY)
         right_gray = cv2.cvtColor(right_img, cv2.COLOR_BGR2GRAY)
+        # Divide by 16.0, as OpenCV's stereo block matching returns disparities in CV_16S format multiplied by 16.
         disparity = self.stereo.compute(left_gray, right_gray).astype(np.float32) / 16.0
         disparity[disparity < 0] = 0
         assert not np.isinf(disparity).any(), "Disparity map contains infinity."
