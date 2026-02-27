@@ -10,3 +10,25 @@ vmin=27
 vmax=270
 dyavg=0
 dymax=0
+
+cam0,1:        camera matrices for the rectified views, in the form [f 0 cx; 0 f cy; 0 0 1], where
+  f:           focal length in pixels
+  cx, cy:      principal point  (note that cx differs between view 0 and 1)
+
+doffs:         x-difference of principal points, doffs = cx1 - cx0
+
+baseline:      camera baseline in mm
+
+width, height: image size
+
+ndisp:         a conservative bound on the number of disparity levels;
+               the stereo algorithm MAY utilize this bound and search from d = 0 .. ndisp-1
+
+isint:         whether the GT disparites only have integer precision (true for the older datasets;
+               in this case submitted floating-point disparities are rounded to ints before evaluating)
+
+vmin, vmax:    a tight bound on minimum and maximum disparities, used for color visualization;
+               the stereo algorithm MAY NOT utilize this information
+
+dyavg, dymax:  average and maximum absolute y-disparities, providing an indication of
+               the calibration error present in the imperfect datasets.
