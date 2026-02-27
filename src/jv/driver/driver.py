@@ -145,10 +145,11 @@ class Driver:
                         num_disparities=depth_kwargs.get('num_disparities', 16*6),
                         block_size=depth_kwargs.get('block_size', 5),
                         min_disparity=depth_kwargs.get('min_disparity', 0),
-                        pre_filter_cap=depth_kwargs.get('pre_filter_cap', 31),
-                        uniqueness_ratio=depth_kwargs.get('uniqueness_ratio', 15),
+                        pre_filter_cap=depth_kwargs.get('pre_filter_cap', 1) if
+                        depth_kwargs.get('pre_filter_cap', 1) > 0 else 1,
+                        uniqueness_ratio=depth_kwargs.get('uniqueness_ratio', 5),
                         speckle_window_size=depth_kwargs.get('speckle_window_size', 100),
-                        speckle_range=depth_kwargs.get('speckle_range', 2),
+                        speckle_range=depth_kwargs.get('speckle_range', 32),
                         max_depth=depth_kwargs.get('max_depth', 10000),
                     )
             self.rectifier = Rectifier(
@@ -224,17 +225,17 @@ class Driver:
             if self.show_det:
                 if self.binocular:
                     # Visualize binocular depth map
-                    depth_map = depth[..., 2]
-                    norm_depth = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
-                    color_depth = cv2.applyColorMap(norm_depth.astype('uint8'), cv2.COLORMAP_JET)
-                    cv2.imshow("binocular_depth", color_depth)
-                    cv2.waitKey(1)
-                    # Visualize disparity map
-                    norm_disparity = cv2.normalize(disparity, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
-                    color_disparity = cv2.applyColorMap(norm_disparity.astype('uint8'), cv2.COLORMAP_JET)
-                    cv2.imshow("binocular_disparity", color_disparity)
-                    cv2.waitKey(1)
-                    # visualize_results(frame[0], frame[1], disparity, depth)
+                    # depth_map = depth[..., 2]
+                    # norm_depth = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
+                    # color_depth = cv2.applyColorMap(norm_depth.astype('uint8'), cv2.COLORMAP_JET)
+                    # cv2.imshow("binocular_depth", color_depth)
+                    # cv2.waitKey(1)
+                    # # Visualize disparity map
+                    # norm_disparity = cv2.normalize(disparity, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
+                    # color_disparity = cv2.applyColorMap(norm_disparity.astype('uint8'), cv2.COLORMAP_JET)
+                    # cv2.imshow("binocular_disparity", color_disparity)
+                    # cv2.waitKey(1)
+                    visualize_results(frame[0], frame[1], disparity, depth)
                 else:
                     colormap = self.scene_model.colormap
                     # Normalize
