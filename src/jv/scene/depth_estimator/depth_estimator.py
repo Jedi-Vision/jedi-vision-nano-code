@@ -66,4 +66,4 @@ class StereoDepthEstimator:
         points_3D = cv2.reprojectImageTo3D(disparity, Q)
         points_3D[np.isinf(points_3D)] = 0
 
-        return points_3D
+        return points_3D, disparity
