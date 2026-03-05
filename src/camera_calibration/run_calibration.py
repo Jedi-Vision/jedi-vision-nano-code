@@ -10,7 +10,6 @@ gstreamer_kwargs = {
     "capture_height": 720,
     "display_width": 1280,
     "display_height": 720,
-    "framerate": 30,
     "flip_method": 2,
 }
 
@@ -18,7 +17,7 @@ fb = FrameBuffer(
         size=1,
         warmup_frames=0,
         frame_skip=0,
-        frame_rate=30,
+        frame_rate=60,
         binocular=True,
         left_sensor_id=1,
         right_sensor_id=0,
