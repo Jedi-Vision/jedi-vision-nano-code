@@ -34,6 +34,10 @@ class FrameBuffer:
         Args:
             size (int, optional): Maximum number of frames to store in the queue.
             camera_index (int | str, optional): Index of the camera to capture from (default is 0).
+            left_sensor_id (int | str, optional): Sensor ID for left camera (default is 0). Can also pass
+                video file path of left binocular image to simulate binocular video stream.
+            right_sensor_id (int | str, optional): Sensor ID for right camera (default is 1). Can also pass
+                video file path of left binocular image to simulate binocular video stream.
             warmup_frames (int, optional): Number of frames to run without adding to queue.
             frame_skip (int, optional): Number of frames to skip over (to decrease throughput)
             frame_rate (int, optional): Frame rate of video (default 30fps), will sleep to ensure
@@ -62,6 +66,7 @@ class FrameBuffer:
         self.gstreamer_kwargs = gstreamer_kwargs
         self.left_sensor_id = left_sensor_id
         self.right_sensor_id = right_sensor_id
+        self.sim_bino = False
 
     def start(self):
         """Starts the frame capturing thread(s)."""
@@ -69,6 +74,7 @@ class FrameBuffer:
             if isinstance(self.left_sensor_id, str) or isinstance(self.right_sensor_id, str):
                 self.capture_left = cv2.VideoCapture(self.left_sensor_id)
                 self.capture_right = cv2.VideoCapture(self.right_sensor_id)
+                self.sim_bino = True
             else:
                 self.capture_left = cv2.VideoCapture(
                     gstreamer_pipeline(
@@ -142,6 +148,23 @@ class FrameBuffer:
                 break
             if self.q.full():
                 self.q.get(timeout=0.001)  # Remove the oldest frame to make space
+
+            # If using simulated binocular camera pipeline, there is no downscaling
+            # according to the arguments like in GStreamer, so we need to 
+            # manually downscale the image before adding to queue.
+            if self.sim_bino:
+                if frame_left is not None:
+                    frame_left = cv2.resize(
+                        frame_left,
+                        (self.gstreamer_kwargs.get("display_width", 1280),
+                         self.gstreamer_kwargs.get("display_height", 720))
+                    )
+                if frame_right is not None:
+                    frame_right = cv2.resize(
+                        frame_right,
+                        (self.gstreamer_kwargs.get("display_width", 1280),
+                         self.gstreamer_kwargs.get("display_height", 720))
+                    )
 
             # Add both frames to the queue
             self.q.put(((frame_left, frame_right), frame_count, timestamp_ms), timeout=0.001)

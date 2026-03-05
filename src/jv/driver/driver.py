@@ -69,15 +69,15 @@ class Driver:
         Kwargs:
             gstreamer_kwargs (dict, optional): GStreamer kwargs. See buffer.py for more information.
             object_kwargs (dict, optional): Object detection kwargs. See object.py for more information.
-            depth_kwargs (dict, optional): Depth kwargs. See video_depth_anything_code and depth_estimator 
+            depth_kwargs (dict, optional): Depth kwargs. See video_depth_anything_code and depth_estimator
                 for more information.
         """
 
         self.frame_buffer = FrameBuffer(
             size=frame_buffer_size,
             camera_index=camera_index,
-            left_sensor_id=depth_kwargs.get("left_sensor_id", 1),
-            right_sensor_id=depth_kwargs.get("right_sensor_id", 0),
+            left_sensor_id=depth_kwargs.get("left_sensor_id", 0),
+            right_sensor_id=depth_kwargs.get("right_sensor_id", 1),
             warmup_frames=warmup_frames,
             frame_skip=frame_skip,
             frame_rate=frame_rate,
