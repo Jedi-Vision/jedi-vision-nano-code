@@ -94,6 +94,8 @@ def test_binocular(frame_rate, frame_skip, buffer_size, warmup, gstreamer_kwargs
         warmup_frames=warmup,
         frame_skip=frame_skip,
         frame_rate=frame_rate,
+        left_sensor_id=1,
+        right_sensor_id=0,
         binocular=True,
         gstreamer_kwargs=gstreamer_kwargs,
     )

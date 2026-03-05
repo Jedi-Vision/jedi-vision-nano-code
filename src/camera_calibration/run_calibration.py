@@ -20,6 +20,8 @@ fb = FrameBuffer(
         frame_skip=0,
         frame_rate=30,
         binocular=True,
+        left_sensor_id=1,
+        right_sensor_id=0,
         gstreamer_kwargs=gstreamer_kwargs,
     )
 
