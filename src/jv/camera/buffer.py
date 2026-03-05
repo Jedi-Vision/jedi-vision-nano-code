@@ -71,11 +71,19 @@ class FrameBuffer:
                 self.capture_right = cv2.VideoCapture(self.right_sensor_id)
             else:
                 self.capture_left = cv2.VideoCapture(
-                    gstreamer_pipeline(sensor_id=self.left_sensor_id, **self.gstreamer_kwargs),
+                    gstreamer_pipeline(
+                        sensor_id=self.left_sensor_id,
+                        framerate=self.frame_rate,
+                        **self.gstreamer_kwargs
+                    ),
                     cv2.CAP_GSTREAMER
                 )
                 self.capture_right = cv2.VideoCapture(
-                    gstreamer_pipeline(sensor_id=self.right_sensor_id, **self.gstreamer_kwargs),
+                    gstreamer_pipeline(
+                        sensor_id=self.right_sensor_id,
+                        framerate=self.frame_rate,
+                        **self.gstreamer_kwargs
+                    ),
                     cv2.CAP_GSTREAMER
                 )
 
