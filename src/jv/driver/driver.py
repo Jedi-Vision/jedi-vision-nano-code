@@ -100,19 +100,6 @@ class Driver:
         self.depth = depth
         self.binocular = binocular
 
-        # Monocular depth
-        self.scene_model = VideoDepthAnything(**MODEL_CONFIGS[vda_model_name])
-        checkpoint_name = 'metric_video_depth_anything' if metric else 'video_depth_anything'
-        self.scene_model.load_state_dict(
-            torch.load(
-                f'{chkpts_folder}/{checkpoint_name}_{vda_model_name}.pth',
-                map_location='cpu',
-                weights_only=True
-            ),
-            strict=True
-        )
-        self.scene_model = self.scene_model.to(torch.device(device)).eval()
-
         # Binocular depth
         if self.binocular:
             def load_calibration_data(filename):
@@ -156,6 +143,18 @@ class Driver:
                 calibration_data=load_calibration_data(depth_kwargs.get("calibration_data", "camera_calibration.yaml")),
                 img_size=(gstreamer_kwargs['display_width'], gstreamer_kwargs['display_height']),
             )
+        else:
+            self.scene_model = VideoDepthAnything(**MODEL_CONFIGS[vda_model_name])
+            checkpoint_name = 'metric_video_depth_anything' if metric else 'video_depth_anything'
+            self.scene_model.load_state_dict(
+                torch.load(
+                    f'{chkpts_folder}/{checkpoint_name}_{vda_model_name}.pth',
+                    map_location='cpu',
+                    weights_only=True
+                ),
+                strict=True
+            )
+            self.scene_model = self.scene_model.to(torch.device(device)).eval()
 
         self.device = device
         self.show_det = show_det
