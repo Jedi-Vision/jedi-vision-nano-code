@@ -13,6 +13,7 @@ Modified on Thursday Feb 26 2026
 # Import required modules
 import cv2
 import numpy as np
+from datetime import datetime
 from jv.camera import FrameBuffer
 
 
@@ -147,14 +148,16 @@ def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,che
         threedpoints, twodpoints_c2,(width, height), None, None)
 
     # Save single camera parameters using cv2.FileStorage
-    fs_c1 = cv2.FileStorage(camera_name + "_c1.yml", cv2.FILE_STORAGE_WRITE)
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    fs_c1 = cv2.FileStorage(camera_name + "_c1_" + timestamp + ".yml", cv2.FILE_STORAGE_WRITE)
     fs_c1.write("k", k1)
     fs_c1.write("d", d1)
     fs_c1.write("r", np.array(r_1))
     fs_c1.write("t", np.array(t_1))
     fs_c1.release()
 
-    fs_c2 = cv2.FileStorage(camera_name + "_c2.yml", cv2.FILE_STORAGE_WRITE)
+    fs_c2 = cv2.FileStorage(camera_name + "_c2_" + timestamp + ".yml", cv2.FILE_STORAGE_WRITE)
     fs_c2.write("k", k2)
     fs_c2.write("d", d2)
     fs_c2.write("r", np.array(r_2))
@@ -167,7 +170,7 @@ def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,che
     )
 
     # Save stereo parameters using cv2.FileStorage
-    fs_stereo = cv2.FileStorage(camera_name + ".yml", cv2.FILE_STORAGE_WRITE)
+    fs_stereo = cv2.FileStorage(camera_name + "_" + timestamp + ".yml", cv2.FILE_STORAGE_WRITE)
     fs_stereo.write("mtx1", mtx1)
     fs_stereo.write("dist1", dist1)
     fs_stereo.write("mtx2", mtx2)
