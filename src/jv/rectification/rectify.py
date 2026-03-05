@@ -49,7 +49,8 @@ class Rectifier:
             self.map2_right (np.ndarray): Second output map for cv2.remap for the right image.
         """
 
-        # Check if downscaled image and get new camera matrices
+        # Check if downscaled image and get new instrinsic camera parameters
+        # with the scaling
         if img_size != cap_size:
 
             def scale_camera_matrix(mtx, scale):
