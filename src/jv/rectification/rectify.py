@@ -7,15 +7,17 @@ class Rectifier:
     def __init__(
         self,
         calibration_data,
-        img_size
+        img_size,
+        cap_size
     ):
 
         self._init_rectify(
             *calibration_data,
-            img_size=img_size
+            img_size=img_size,
+            cap_size=cap_size
         )
 
-    def _init_rectify(self, mtx1, dist1, mtx2, dist2, R, T, img_size):
+    def _init_rectify(self, mtx1, dist1, mtx2, dist2, R, T, img_size, cap_size):
         """
         Initializes stereo rectification for a pair of cameras.
 
@@ -30,7 +32,8 @@ class Rectifier:
             dist2 (np.ndarray): Distortion coefficients of the right camera.
             R (np.ndarray): Rotation matrix between the coordinate systems of the two cameras.
             T (np.ndarray): Translation vector between the coordinate systems of the two cameras.
-            img_size (tuple): Size of the images as (width, height).
+            img_size (tuple): Size of the scaled displayed images as (width, height).
+            cap_size (tuple): Size of the captured images as (width, height).
 
         Sets:
             self.R1 (np.ndarray): Rectification transform for the left camera.
@@ -45,6 +48,25 @@ class Rectifier:
             self.map1_right (np.ndarray): First output map for cv2.remap for the right image.
             self.map2_right (np.ndarray): Second output map for cv2.remap for the right image.
         """
+
+        # Check if downscaled image and get new camera matrices
+        if img_size != cap_size:
+
+            def scale_camera_matrix(mtx, scale):
+                mtx_scaled = mtx.copy()
+                mtx_scaled[0, 0] *= scale  # fx
+                mtx_scaled[1, 1] *= scale  # fy
+                mtx_scaled[0, 2] *= scale  # cx
+                mtx_scaled[1, 2] *= scale  # cy
+                return mtx_scaled
+
+            scale_width = cap_size[0] / img_size[0]
+            scale_height = cap_size[1] / img_size[1]
+            assert scale_width == scale_height, "Width and height must be scaled equally."
+            scale = scale_width
+
+            [mtx1, mtx2] = map(lambda x: scale_camera_matrix(x, scale), [mtx1, mtx2])
+
         # Compute rectification transforms for stereo cameras
         R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(
             mtx1, dist1, mtx2, dist2, img_size,

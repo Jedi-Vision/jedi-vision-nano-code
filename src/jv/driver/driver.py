@@ -142,6 +142,7 @@ class Driver:
             self.rectifier = Rectifier(
                 calibration_data=load_calibration_data(depth_kwargs.get("calibration_data", "camera_calibration.yaml")),
                 img_size=(gstreamer_kwargs['display_width'], gstreamer_kwargs['display_height']),
+                cap_size=(gstreamer_kwargs['capture_width'], gstreamer_kwargs['capture_height']),
             )
         else:
             self.scene_model = VideoDepthAnything(**MODEL_CONFIGS[vda_model_name])
