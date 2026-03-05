@@ -60,8 +60,8 @@ class Rectifier:
                 mtx_scaled[1, 2] *= scale  # cy
                 return mtx_scaled
 
-            scale_width = cap_size[0] / img_size[0]
-            scale_height = cap_size[1] / img_size[1]
+            scale_width = img_size[0] / cap_size[0]
+            scale_height = img_size[1] / cap_size[1]
             assert scale_width == scale_height, "Width and height must be scaled equally."
             scale = scale_width
 
