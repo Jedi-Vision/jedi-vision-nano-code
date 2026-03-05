@@ -166,8 +166,8 @@ def main():
                         help="GStreamer display width (default: 640)")
     parser.add_argument("--display-height", type=int, default=360,
                         help="GStreamer display height (default: 360)")
-    parser.add_argument("--sensor-mode", type=int, default=3,
-                        help="GStreamer sensor mode (default: 3)")
+    parser.add_argument("--sensor-mode", type=int, default=4,
+                        help="GStreamer sensor mode (default: 4)")
     parser.add_argument("--flip-method", type=int, default=0,
                         help="GStreamer flip method (default: 0)")
 

@@ -5,7 +5,7 @@ BOX_SIZE = 25  # mm
 GRID_SIZE = (10, 7)  # width times height, internal corners not true pattern size!
 
 gstreamer_kwargs = {
-    "sensor_mode": 3,
+    "sensor_mode": 4,
     "capture_width": 1280,
     "capture_height": 720,
     "display_width": 1280,

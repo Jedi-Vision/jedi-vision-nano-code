@@ -192,7 +192,7 @@ class FrameBuffer:
 
 def gstreamer_pipeline(
     sensor_id: int = 0,
-    sensor_mode: int = 3,  # (1280x720, 59.9999 fps)
+    sensor_mode: int = 4,  # (1280x720, 59.9999 fps)
     capture_width: int = 1280,
     capture_height: int = 720,
     display_width: int = 1280,
