@@ -79,7 +79,7 @@ def record_binocular(frame_rate, frame_skip, buffer_size, warmup, gstreamer_kwar
 
 def main():
     parser = argparse.ArgumentParser(description="Record stereo videos from FrameBuffer")
-    parser.add_argument("--frame-rate", type=int, default=30, help="Frame rate (default: 30)")
+    parser.add_argument("--frame-rate", type=int, default=60, help="Frame rate (default: 30)")
     parser.add_argument("--frame-skip", type=int, default=0, help="Number of frames to skip between captures (default: 0)")
     parser.add_argument("--buffer-size", type=int, default=1, help="Max frames in the queue (default: 1)")
     parser.add_argument("--warmup", type=int, default=30, help="Number of warmup frames before buffering (default: 30)")
@@ -101,7 +101,6 @@ def main():
         "capture_height": args.capture_height,
         "display_width": args.display_width,
         "display_height": args.display_height,
-        "framerate": args.frame_rate,
         "flip_method": args.flip_method,
     }
 
