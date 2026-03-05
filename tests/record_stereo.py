@@ -81,7 +81,7 @@ def main():
     parser = argparse.ArgumentParser(description="Record stereo videos from FrameBuffer")
     parser.add_argument("--frame-rate", type=int, default=60, help="Frame rate (default: 30)")
     parser.add_argument("--frame-skip", type=int, default=0, help="Number of frames to skip between captures (default: 0)")
-    parser.add_argument("--buffer-size", type=int, default=1, help="Max frames in the queue (default: 1)")
+    parser.add_argument("--buffer-size", type=int, default=-1, help="Max frames in the queue (default: -1)")
     parser.add_argument("--warmup", type=int, default=30, help="Number of warmup frames before buffering (default: 30)")
     parser.add_argument("--capture-width", type=int, default=1280, help="GStreamer capture width (default: 1280)")
     parser.add_argument("--capture-height", type=int, default=720, help="GStreamer capture height (default: 720)")
