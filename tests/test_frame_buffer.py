@@ -188,7 +188,6 @@ def main():
             "capture_height": args.capture_height,
             "display_width": args.display_width,
             "display_height": args.display_height,
-            "framerate": args.frame_rate,
             "flip_method": args.flip_method,
         }
         test_binocular(
