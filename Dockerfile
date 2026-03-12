@@ -17,12 +17,7 @@ RUN apt-get update && apt-get install -y \
     git ninja-build pkg-config \
     curl jq \
     libopenblas-dev libomp-dev \
-    libzmq3-dev \
-    portaudio19-dev libportaudio2 \
-    libglfw3-dev libxinerama-dev libxcursor-dev \
-    xorg-dev libglu1-mesa-dev \
-    python3-dev python3-pip \
-    && rm -rf /var/lib/apt/lists/*
+    python3-dev python3-pip
 
 # -----------------------------
 # Fix Jetson pip index (JP6)
@@ -32,21 +27,13 @@ RUN mkdir -p /etc/pip && \
     > /etc/pip.conf
 
 RUN pip install --upgrade pip setuptools wheel packaging ninja
-RUN pip install --no-cache-dir "cmake==4.1.2"
+RUN pip install "cmake==4.1.2"
 RUN cmake --version
-
-# -----------------------------
-# Bootstrap vcpkg for spatial-audio
-# -----------------------------
-WORKDIR /opt
-RUN git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}" && \
-    "${VCPKG_ROOT}/bootstrap-vcpkg.sh" && \
-    "${VCPKG_ROOT}/vcpkg" version
 
 # -----------------------------
 # Install downgraded numpy
 # -----------------------------
-RUN python3 -m pip install --upgrade --force-reinstall --no-cache-dir "numpy<2"
+RUN python3 -m pip install --upgrade --force-reinstall "numpy<2"
 
 # -----------------------------
 # Build xFormers v0.0.28 (compatible with PyTorch 2.4)
@@ -89,6 +76,22 @@ WORKDIR /workspace
 # Install jv + requirements
 # -----------------------------
 RUN git clone --recursive https://github.com/Jedi-Vision/jedi-vision-nano-code.git
+
+# Keep the spatial-audio toolchain late so edits there do not invalidate
+# the heavier xFormers/Triton layers above.
+# -----------------------------
+# Install spatial-audio toolchain
+# -----------------------------
+RUN apt-get update && apt-get install -y \
+    libzmq3-dev \
+    portaudio19-dev libportaudio2 \
+    libglfw3-dev libxinerama-dev libxcursor-dev \
+    xorg-dev libglu1-mesa-dev
+WORKDIR /opt
+RUN git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}" && \
+    "${VCPKG_ROOT}/bootstrap-vcpkg.sh" && \
+    "${VCPKG_ROOT}/vcpkg" version
+
 WORKDIR /workspace/jedi-vision-nano-code/src/spatial-audio
 # Validate the spatial-audio toolchain without paying for a full build here.
 RUN cmake --preset vcpkg
