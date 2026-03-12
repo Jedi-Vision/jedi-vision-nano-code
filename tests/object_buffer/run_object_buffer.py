@@ -14,8 +14,8 @@ while True:
         objects=[ObjectCoordData(
             id=i,
             label=-1,
-            x_2d=0.,
-            y_2d=0.,
+            x=0.,
+            y=0.,
             depth=0.
         )],
         frame_number=i,
