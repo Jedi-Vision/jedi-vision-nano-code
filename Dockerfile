@@ -5,6 +5,7 @@ ENV TORCH_CUDA_ARCH_LIST=8.7
 ENV CUDA_HOME=/usr/local/cuda
 ENV USE_NINJA=1
 ENV MAX_JOBS=4
+ENV VCPKG_ROOT=/opt/vcpkg
 
 # Override NVIDIA's baked-in pip env vars
 ENV PIP_INDEX_URL=https://pypi.jetson-ai-lab.io/jp6/cu126
@@ -12,8 +13,14 @@ ENV PIP_EXTRA_INDEX_URL=https://pypi.ngc.nvidia.com
 ENV PIP_TRUSTED_HOST=pypi.jetson-ai-lab.io
 
 RUN apt-get update && apt-get install -y \
-    git cmake ninja-build \
+    build-essential \
+    git ninja-build pkg-config \
+    curl jq \
     libopenblas-dev libomp-dev \
+    libzmq3-dev \
+    portaudio19-dev libportaudio2 \
+    libglfw3-dev libxinerama-dev libxcursor-dev \
+    xorg-dev libglu1-mesa-dev \
     python3-dev python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
@@ -25,6 +32,16 @@ RUN mkdir -p /etc/pip && \
     > /etc/pip.conf
 
 RUN pip install --upgrade pip setuptools wheel packaging ninja
+RUN pip install --no-cache-dir "cmake==4.1.2"
+RUN cmake --version
+
+# -----------------------------
+# Bootstrap vcpkg for spatial-audio
+# -----------------------------
+WORKDIR /opt
+RUN git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}" && \
+    "${VCPKG_ROOT}/bootstrap-vcpkg.sh" && \
+    "${VCPKG_ROOT}/vcpkg" version
 
 # -----------------------------
 # Install downgraded numpy
@@ -53,7 +70,7 @@ WORKDIR /opt/triton
 RUN git checkout v3.0.0
 RUN git submodule update --init --recursive
 
-RUN pip install ninja cmake wheel
+RUN pip install ninja wheel
 RUN pip install -e python --no-build-isolation
 
 # -----------------------------
@@ -72,6 +89,9 @@ WORKDIR /workspace
 # Install jv + requirements
 # -----------------------------
 RUN git clone --recursive https://github.com/Jedi-Vision/jedi-vision-nano-code.git
+WORKDIR /workspace/jedi-vision-nano-code/src/spatial-audio
+# Validate the spatial-audio toolchain without paying for a full build here.
+RUN cmake --preset vcpkg
 WORKDIR /workspace/jedi-vision-nano-code
 RUN pip install .
 RUN sed -i '/torch/d' requirements.txt && \
