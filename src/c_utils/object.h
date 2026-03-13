@@ -10,14 +10,14 @@ extern "C" {
 typedef struct ObjectCoordData {
     int id;
     int label;
-    float x;   // in meters
-    float y;   // in meters
-    float depth;  // Depth in meters
+    double x;   // in meters
+    double y;   // in meters
+    double depth;  // Depth in meters
 } ObjectCoordData;
 
 typedef struct ObjectRepData {
     int frame_number;
-    float timestamp_ms;
+    double timestamp_ms;
     ObjectCoordData* objects;
     int32_t num_coords;
 } ObjectRepData;
