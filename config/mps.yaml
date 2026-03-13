@@ -2,9 +2,10 @@
 
 driver:
     device: mps  # cpu, mps, or cuda
-    output_to: none  # socket, file, or none
+    output_to: socket  # socket, file, or none
     serial_type: struct  # struct or protobuf
     object_model_name: yolo11
+    det_whitelist: [0]  # refer to yolo_utils.py for label list
     vda_model_name: vits
     chkpts_folder: ./checkpoints
     retain_frames: 30

@@ -23,6 +23,17 @@ class ObjectCoordData:
 
 
 @dataclass
+class Object2DCoordData:
+    id: int
+    label: int
+    # Bounding Box coordinates
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+
+
+@dataclass
 class ObjectRepData:
     frame_number: int
     timestamp_ms: float

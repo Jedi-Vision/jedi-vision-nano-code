@@ -11,7 +11,7 @@ import torch
 import torch.nn.functional as F
 
 # Local imports
-from .data import ObjectCoordData
+from .data import Object2DCoordData, ObjectCoordData
 from .ade_utils import ade_palette, ADE_ID_TO_LABEL
 from .abstract import AbstractModelClass
 
@@ -91,7 +91,7 @@ class SegFormerObjectRepresentationModel(AbstractModelClass):
 
         return model
 
-    def run(self, input: torch.Tensor, **kwargs) -> list[ObjectCoordData]:
+    def run(self, input: torch.Tensor, **kwargs) -> list[Object2DCoordData]:
         batch_feature = self.preprocess(input, **kwargs)
         output = self.process(batch_feature, **kwargs)
         return self.postprocess(output, input=input, **kwargs)
@@ -110,7 +110,7 @@ class SegFormerObjectRepresentationModel(AbstractModelClass):
         epsilon: float = 0.5,
         include: list = [12, 20],  # person and car only
         **kwargs
-    ) -> list[ObjectCoordData]:
+    ) -> list[Object2DCoordData]:
 
         logits = out.logits
 
@@ -164,8 +164,8 @@ class SegFormerObjectRepresentationModel(AbstractModelClass):
                         ObjectCoordData(
                             id=-1,
                             label=int(blocked_mask[h-1][w-1].item()),
-                            x_2d=x,
-                            y_2d=y,
+                            x=x,
+                            y=y,
                             depth=0
                         )
                     )
@@ -266,7 +266,7 @@ class YoloObjectRepresentationModel(AbstractModelClass):
     def _setup_model(self, yolo_model_name) -> YOLO:
         return YOLO(YOLO_MODEL_ZOO[yolo_model_name])
 
-    def run(self, input, **kwargs) -> list[ObjectCoordData]:
+    def run(self, input, **kwargs) -> list[Object2DCoordData]:
         out = self.process(input, **kwargs)
         return self.postprocess(out, input=input, **kwargs)
 
@@ -275,6 +275,7 @@ class YoloObjectRepresentationModel(AbstractModelClass):
 
     def process(self, input, **kwargs) -> Results:
         kwargs.pop("show_det")
+        kwargs.pop("det_whitelist")
 
         return self.model.track(
             input,
@@ -283,10 +284,11 @@ class YoloObjectRepresentationModel(AbstractModelClass):
             **kwargs
         )[0]
 
-    def postprocess(self, out: Results, **kwargs) -> list[ObjectCoordData]:
+    def postprocess(self, out: Results, **kwargs) -> list[Object2DCoordData]:
 
         input: torch.Tensor | None = kwargs.get("input", None)
         show_det: bool = kwargs.get("show_det", False)
+        whitelist: set | None = kwargs.get("det_whitelist", None)
 
         if input is None:
             raise Exception("Fatal error on model run, no input frame provided.")
@@ -301,7 +303,7 @@ class YoloObjectRepresentationModel(AbstractModelClass):
         if out.boxes and out.boxes.is_track:
 
             objects = []
-            boxes = out.boxes.xywh.cpu() if out.boxes.xywh is torch.Tensor else out.boxes.xywh
+            boxes = out.boxes.xyxy.cpu() if out.boxes.xyxy is torch.Tensor else out.boxes.xyxy
             object_ids = out.boxes.id.int().cpu().tolist() if isinstance(out.boxes.id, torch.Tensor) else \
                 (out.boxes.id.astype(int).tolist() if isinstance(out.boxes.id, np.ndarray) else None)
             labels = out.boxes.cls.int().cpu().tolist() if isinstance(out.boxes.cls, torch.Tensor) else \
@@ -311,20 +313,25 @@ class YoloObjectRepresentationModel(AbstractModelClass):
                 raise Exception("Fatal error on model run, no labels or object id's found.")
 
             for box, object_id, label_id in zip(boxes, object_ids, labels):
-                x, y, _, _ = box
+
+                if whitelist and label_id not in whitelist:
+                    continue
+
+                x1, y1, x2, y2 = box
                 track = self.track_history[object_id]
-                track.append((int(x), int(y)))
+                track.append((int((x1 + x2) / 2), int((y1 + y2) / 2)))
 
                 if len(track) > self.retain_frames:  # retain track for only 30 frames
                     track.pop(0)
 
                 objects.append(
-                    ObjectCoordData(
+                    Object2DCoordData(
                         id=object_id,
                         label=label_id,
-                        x=x.item(),  # closest pixel to center
-                        y=y.item(),  # closest pixel to center
-                        depth=-1
+                        x1=x1.item(),
+                        y1=y1.item(),
+                        x2=x2.item(),
+                        y2=y2.item(),
                     )
                 )
 

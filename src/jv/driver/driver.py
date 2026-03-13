@@ -4,7 +4,7 @@ from jv.scene import VideoDepthAnything, MODEL_CONFIGS
 from jv.scene import SGBMStereoDepthEstimator, BMStereoDepthEstimator
 from jv.rectification import Rectifier
 from jv.camera import FrameBuffer
-from jv.representation.data import ObjectRepData
+from jv.representation.data import ObjectRepData, ObjectCoordData, Object2DCoordData
 from typing import Literal
 import torch
 import cv2
@@ -27,6 +27,7 @@ class Driver:
         output_to: Literal["socket", "file", "none"] = "socket",
         serial_type: Literal["struct", "protobuf"] = "struct",
         object_model_name: str = "yolo11",
+        det_whitelist: set = {0},
         vda_model_name: str = "vits",
         chkpts_folder: str = "./checkpoints",
         retain_frames: int = 30,
@@ -51,6 +52,7 @@ class Driver:
             device (Literal["cpu", "mps", "cuda"]): Device to run models on.
             output_to (Literal["socket", "file", "none"]): Output destination for object buffer.
             object_model_name (str, optional): Name of the object detection model. Defaults to "yolo11".
+            det_whitelist (set, optional): Object detection label whitelist.
             vda_model_name (str, optional): Name of the video depth estimation model. Defaults to "vits".
             chkpts_folder (str, optional): Path to the folder containing model checkpoints. Defaults to "./checkpoints".
             retain_frames (int, optional): Number of frames to retain in environment model. Defaults to 30.
@@ -72,6 +74,11 @@ class Driver:
             depth_kwargs (dict, optional): Depth kwargs. See video_depth_anything_code and depth_estimator
                 for more information.
         """
+
+        # Type coercion
+        if isinstance(det_whitelist, list):
+            det_whitelist = set(det_whitelist)
+        self.det_whitelist = det_whitelist
 
         self.frame_buffer = FrameBuffer(
             size=frame_buffer_size,
@@ -181,7 +188,12 @@ class Driver:
         if self.binocular:
             frame = self.rectifier.rectify(frame)
 
-        objects = self.env_model.run(frame[0], show_det=self.show_det, **self.object_kwargs)
+        objects = self.env_model.run(
+            frame[0],
+            show_det=self.show_det,
+            det_whitelist=self.det_whitelist,
+            **self.object_kwargs
+        )
 
         # Log object detection results
         sys_mgmt.logMetric("objects.detected_count", len(objects))
@@ -196,12 +208,49 @@ class Driver:
                     self.rectifier.Q
                 )
                 assert not torch.isinf(torch.tensor(depth)).any(), "Infinity found in depth map."
+
                 # For each object from the 2d (x,y) coordinate we get the 3d (X,Y,Z)
                 # convert to meters as well
-                for obj in objects:
-                    x, y = int(obj.x), int(obj.y)
-                    obj.depth = float(depth[y][x][2]) * DEPTH_CONV
-                    obj.x, obj.y = float(depth[y][x][0]) * DEPTH_CONV, float(depth[y][x][1]) * DEPTH_CONV
+                def two_to_three(obj: Object2DCoordData):
+                    x1, y1, x2, y2 = map(int, (obj.x1, obj.y1, obj.x2, obj.y2))
+
+                    # Extract the region of interest from the reprojection map (depth)
+                    roi = depth[y1:y2, x1:x2]
+                    z_values = roi[..., 2]
+
+                    # Exclude zero or invalid values when computing depths
+                    valid_mask = (z_values > 0) & np.isfinite(z_values)
+
+                    # If there is a valid mask of non-zero depths for the given prediction
+                    # then we take a Gaussian-weighted average to derive the x and y
+                    # coordinates of the object, and get the minimum (non-zero) depth
+                    # value
+                    if valid_mask.any():
+                        min_z = np.min(z_values[valid_mask])
+
+                        h, w = roi.shape[:2]
+                        cx, cy = w / 2.0, h / 2.0
+                        yy, xx = np.mgrid[:h, :w]
+
+                        # Weights derived from Gaussian kernel based on distance from bounding box center
+                        sigma = max(min(h, w) / 4.0, 1.0)
+                        weights = np.exp(-((xx - cx)**2 + (yy - cy)**2) / (2 * sigma**2))
+
+                        x_values = roi[..., 0]
+                        y_values = roi[..., 1]
+
+                        avg_x = np.average(x_values[valid_mask], weights=weights[valid_mask])
+                        avg_y = np.average(y_values[valid_mask], weights=weights[valid_mask])
+                    else:
+                        min_z, avg_x, avg_y = 0.0, 0.0, 0.0
+
+                    return ObjectCoordData(
+                        id=obj.id,
+                        label=obj.label,
+                        x=float(avg_x * DEPTH_CONV),
+                        y=float(avg_y * DEPTH_CONV),
+                        depth=float(min_z * DEPTH_CONV)
+                    )
 
             else:  # Use monocular depth model
                 frame = cv2.cvtColor(frame[0], cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
@@ -213,8 +262,18 @@ class Driver:
                 )  # fp32=False causes a black output and NaN values in model
 
                 # Add depth information to objects
-                for obj in objects:
-                    obj.depth = float(depth[obj.y][obj.x])
+                def two_to_three(obj: Object2DCoordData):
+                    x, y = (int((obj.x1 + obj.x2) / 2), int((obj.y1 + obj.y2) / 2))
+
+                    return ObjectCoordData(
+                        id=obj.id,
+                        label=obj.label,
+                        x=x,
+                        y=y,
+                        depth=float(depth[y][x])
+                    )
+
+            objects = list(map(two_to_three, objects))
 
             # Log depth statistics
             sys_mgmt.logMetric("depth.min", depth.min().item())  # TODO Review these metrics
@@ -243,6 +302,17 @@ class Driver:
                     color_depth = colormap[color_depth]
                     cv2.imshow("msg.mask", color_depth)
                     cv2.waitKey(1)
+        else:
+            # Convert Object2DCoordData to ObjectCoordData with dummy depth if needed
+            objects = [
+                ObjectCoordData(
+                    id=obj.id,
+                    label=obj.label,
+                    x=(obj.x1 + obj.x2) / 2,
+                    y=(obj.y1 + obj.y2) / 2,
+                    depth=0.0
+                ) for obj in objects
+            ]
 
         return ObjectRepData(
             frame_number=frame_number,
