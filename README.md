@@ -98,12 +98,31 @@ sudo docker run -it --rm \
     -v /tmp/argus_socket:/tmp/argus_socket \
     -v $HOME/.Xauthority:/root/.Xauthority:rw \
     -v /dev:/dev \
+    --device /dev/snd \
+    --group-add audio \
+    -e XDG_RUNTIME_DIR=/run/user/$(id -u) \
+    -e PULSE_SERVER=unix:/run/user/$(id -u)/pulse/native \
+    -v /run/user/$(id -u)/pulse:/run/user/$(id -u)/pulse \
+    -v $HOME/.config/pulse/cookie:/root/.config/pulse/cookie:ro \
     -e DISPLAY=$DISPLAY \
     -v /etc/machine-id:/etc/machine-id:ro \
     jp61-orin-xformers
 ```
 
 (It is also possible to run this command from `start_container.sh`.)
+
+`start_container.sh` now auto-detects the host PulseAudio Unix socket and mounts the
+matching runtime directory and cookie when available, while still falling back to
+`/dev/snd`-based ALSA access on Linux hosts that expose it.
+
+If your host does not expose `/run/user/$UID/pulse/native` to Docker but does have a
+reachable PulseAudio server, export `PULSE_SERVER` before launching the script. For
+example, with a TCP bridge:
+
+```bash
+export PULSE_SERVER=tcp:host.docker.internal:4713
+bash start_container.sh
+```
 
 Then start the pipeline:
 
