@@ -85,6 +85,7 @@ RUN git clone --recursive https://github.com/Jedi-Vision/jedi-vision-nano-code.g
 RUN apt-get update && apt-get install -y \
     libzmq3-dev \
     portaudio19-dev libportaudio2 \
+    libasound2-plugins alsa-utils pulseaudio-utils \
     libglfw3-dev libxinerama-dev libxcursor-dev \
     xorg-dev libglu1-mesa-dev
 WORKDIR /opt
