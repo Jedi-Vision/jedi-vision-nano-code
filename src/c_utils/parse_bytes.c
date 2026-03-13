@@ -54,7 +54,7 @@ int parse_object_rep(const uint8_t *buf, size_t len, ObjectRepData *out) {
     if (i >= len) return -1;
 
     // Consume frame number and timestamp
-    int32_t frame_number = read_int32_le(&buf[i]); i += 4;
+    int frame_number = read_int32_le(&buf[i]); i += 4;
     double timestamp_ms = read_double_le(&buf[i]); i += 8;
 
     out->frame_number = frame_number;
@@ -84,9 +84,9 @@ int parse_object_rep(const uint8_t *buf, size_t len, ObjectRepData *out) {
 
         // Read fields in dataclass order (see object.h)
         if (i + 4 > len) return -1;
-        int32_t id = read_int32_le(&buf[i]); i += 4;
+        int id = read_int32_le(&buf[i]); i += 4;
         if (i + 4 > len) return -1;
-        int32_t label = read_int32_le(&buf[i]); i += 4;
+        int label = read_int32_le(&buf[i]); i += 4;
         if (i + 8 > len) return -1;
         double x = read_double_le(&buf[i]); i += 8;
         if (i + 8 > len) return -1;
@@ -97,7 +97,7 @@ int parse_object_rep(const uint8_t *buf, size_t len, ObjectRepData *out) {
         out->objects[idx].id = id;
         out->objects[idx].label = label;
         out->objects[idx].x = x;
-        out->objects[idx].x = y;
+        out->objects[idx].y = y;
         out->objects[idx].depth = depth;
         
         // After label, the next byte may be '%' (next item) or '^' (end)
