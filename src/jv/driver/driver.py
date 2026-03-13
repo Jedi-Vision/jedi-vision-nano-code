@@ -268,8 +268,8 @@ class Driver:
                     return ObjectCoordData(
                         id=obj.id,
                         label=obj.label,
-                        x=x,
-                        y=y,
+                        x=float(x),
+                        y=float(y),
                         depth=float(depth[y][x])
                     )
 
@@ -298,7 +298,7 @@ class Driver:
                 else:
                     colormap = self.scene_model.colormap
                     # Normalize
-                    color_depth = ((depth - depth.min()) / (depth.max() - depth.min() + 1e-8)*255).to(torch.uint8)
+                    color_depth = ((depth - depth.min()) / (depth.max() - depth.min() + 1e-8)*255).astype(np.uint8)
                     color_depth = colormap[color_depth]
                     cv2.imshow("msg.mask", color_depth)
                     cv2.waitKey(1)
