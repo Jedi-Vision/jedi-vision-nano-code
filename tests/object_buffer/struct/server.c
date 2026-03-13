@@ -89,7 +89,7 @@ int main(int argc, char const *argv[])
             ObjectCoordData *c = &rep.objects[i];
 
             // Get the 1D indexing based on 2D shape of data
-            printf("  [%d] x=%f y=%f z=%f id=%d label='%d'\n", i, c->x_2d, c->y_2d, c->depth, c->id, c->label);
+            printf("  [%d] x=%f y=%f z=%f id=%d label='%d'\n", i, c->x, c->y, c->depth, c->id, c->label);
         }
 
         // free

@@ -88,16 +88,16 @@ int parse_object_rep(const uint8_t *buf, size_t len, ObjectRepData *out) {
         if (i + 4 > len) return -1;
         int32_t label = read_int32_le(&buf[i]); i += 4;
         if (i + 8 > len) return -1;
-        double x_2d = read_double_le(&buf[i]); i += 8;
+        double x = read_double_le(&buf[i]); i += 8;
         if (i + 8 > len) return -1;
-        double y_2d = read_double_le(&buf[i]); i += 8;
+        double y = read_double_le(&buf[i]); i += 8;
         if (i + 8 > len) return -1;
         double depth = read_double_le(&buf[i]); i += 8;
         
         out->objects[idx].id = id;
         out->objects[idx].label = label;
-        out->objects[idx].x_2d = x_2d;
-        out->objects[idx].y_2d = y_2d;
+        out->objects[idx].x = x;
+        out->objects[idx].x = y;
         out->objects[idx].depth = depth;
         
         // After label, the next byte may be '%' (next item) or '^' (end)
