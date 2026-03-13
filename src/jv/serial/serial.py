@@ -163,7 +163,9 @@ def get_format_and_values_dataclass(dc) -> tuple[str, list]:
         object = getattr(dc, name)
 
         if is_dataclass(typ):
-            serialize_dataclass(field)
+            fmt, val = get_format_and_values_dataclass(object)
+            format += fmt
+            values.extend(val)
         else:
             try:
                 fmt, val = get_format_and_values(typ, object)
