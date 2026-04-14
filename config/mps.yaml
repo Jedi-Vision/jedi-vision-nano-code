@@ -43,13 +43,17 @@ stereo:
     speckle_range: 2  # max disparity variation in connected component, implicitly *16, typically 1-2
     max_depth: 10000.0  # max depth (mm), points beyond are zeroed
     calibration_data: camera_calibration.yaml
-    left_sensor_id: examples/videos/left.mp4  # if set to string then can open filepath
-    right_sensor_id: examples/videos/right.mp4  # if set to string then can open filepath
+    left_sensor_id: examples/videos/1/left.mp4  # if set to string then can open filepath
+    right_sensor_id: examples/videos/1/right.mp4  # if set to string then can open filepath
+    sample_method: gauss
+    wls_filter: false
+    wls_lambda: 8000  # Regularization for WLS smoothness
+    wls_sigma: 1.5  # Sensitivty of filter to edges (0.8 - 2.0)
 
 gstreamer:
     sensor_mode: 4  # (1280x720, 59.9999 fps)
     capture_width: 1280
     capture_height: 720
-    display_width: 1280
-    display_height: 720
+    display_width: 640
+    display_height: 360
     flip_method: 2

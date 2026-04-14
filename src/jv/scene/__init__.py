@@ -1,2 +1,3 @@
 from .depth_estimator import BMStereoDepthEstimator, SGBMStereoDepthEstimator, StereoDepthEstimatorBase
 from .video_depth_anything_code.video_depth_stream import VideoDepthAnything, MODEL_CONFIGS
+from .sample import sample
