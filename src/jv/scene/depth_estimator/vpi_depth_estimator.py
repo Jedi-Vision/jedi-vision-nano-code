@@ -1,41 +1,57 @@
 import numpy as np
 import vpi
 
+
 class VPIDepthEstimator:
-    def __init__(
-        self,
-        baseline,           # meters
-        focal_length_px,    # pixels
-        max_disparity=64,
-        backend=vpi.Backend.CUDA
-    ):
-        self.baseline = baseline
-        self.focal_length = focal_length_px
-        self.max_disparity = max_disparity
-        self.backend = backend
+    """
+    Drop-in replacement depth estimator using NVIDIA VPI stereo disparity.
 
-    def estimate(self, left_img, right_img):
+    Assumes:
+    - Input images are ALREADY rectified
+    - Input images are numpy arrays (H, W) or (H, W, 3)
+    """
+
+    def __init__(self, config):
+        # Core stereo parameters
+        self.baseline = config.get("baseline", 0.1)  # meters
+        self.focal_length = config.get("focal_length_px", 500.0)  # pixels
+        self.max_disparity = config.get("max_disparity", 64)
+
+        # Output control
+        self.return_depth = config.get("return_depth", True)
+
+        # Backend selection
+        backend_str = config.get("backend", "cuda").upper()
+        self.backend = getattr(vpi.Backend, backend_str)
+
+        # Performance: persist backend context
+        self._backend_ctx = vpi.Backend(self.backend)
+
+    def compute(self, left_img, right_img):
         """
-        left_img, right_img: numpy uint8 grayscale or RGB
-        returns: depth map (float32, meters)
+        Main entry point (matches repo convention)
+
+        Args:
+            left_img, right_img: np.ndarray
+
+        Returns:
+            np.ndarray (depth in meters OR disparity)
         """
 
-        # Ensure grayscale
+        # Convert to grayscale if needed
         if left_img.ndim == 3:
             left_img = self._to_gray(left_img)
         if right_img.ndim == 3:
             right_img = self._to_gray(right_img)
 
-        with vpi.Backend(self.backend):
-            # Wrap numpy → VPI
+        with self._backend_ctx:
             left = vpi.asimage(left_img)
             right = vpi.asimage(right_img)
 
-            # Convert to required format
+            # Ensure correct format
             left = left.convert(vpi.Format.U8)
             right = right.convert(vpi.Format.U8)
 
-            # Stereo disparity
             disparity = vpi.stereodisp(
                 left,
                 right,
@@ -43,22 +59,18 @@ class VPIDepthEstimator:
                 maxdisp=self.max_disparity
             )
 
-            # Convert back to numpy
-            disp_np = disparity.cpu()
+            disp_np = disparity.cpu().astype(np.float32)
 
-        # Convert disparity → depth
-        depth = self._disparity_to_depth(disp_np)
+        # Clean invalid disparities
+        disp_np[disp_np <= 0] = np.nan
 
-        return depth
+        if not self.return_depth:
+            return disp_np
+
+        return self._disparity_to_depth(disp_np)
 
     def _disparity_to_depth(self, disparity):
-        disparity = disparity.astype(np.float32)
-
-        # Avoid divide by zero
-        disparity[disparity == 0] = np.nan
-
-        depth = (self.focal_length * self.baseline) / disparity
-        return depth
+        return (self.focal_length * self.baseline) / disparity
 
     def _to_gray(self, img):
         return np.dot(img[..., :3], [0.299, 0.587, 0.114]).astype(np.uint8)
