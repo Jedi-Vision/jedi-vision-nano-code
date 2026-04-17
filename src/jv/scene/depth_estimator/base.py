@@ -12,13 +12,20 @@ class StereoDepthEstimatorBase(ABC):
         """
         self.max_depth = max_depth
 
+        # Forwarded attributes to set in derived child clases
+        self.right_match = None
+        self.stereo = None
+        self.wls_sigma = False
+        self.wls_filter = False
+
     @abstractmethod
-    def calc_disparity(self, frame: tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def calc_disparity(self, left_img: np.ndarray, right_img: np.ndarray) -> np.ndarray:
         """
         Compute the disparity map from a pair of stereo images.
 
         Args:
-            frame: Tuple of (left_img, right_img), both as np.ndarray.
+            left_img (np.ndarray): Grayscale image from left camera.
+            right_img (np.ndarray): Grayscale image from right camera.
 
         Returns:
             Disparity map as np.ndarray (float32).
@@ -27,6 +34,40 @@ class StereoDepthEstimatorBase(ABC):
 
     def __call__(self, frame, Q):
         return self.run(frame, Q)
+
+    def apply_wls_filter(self, left_disparity, left_img, right_img):
+        """
+        Apply Weighted Least Squares (WLS) filter to refine disparity map.
+
+        This method uses both left and right disparity maps to apply a WLS filter,
+        which improves disparity map quality by reducing noise while preserving edges.
+
+        Args:
+            left_disparity (np.ndarray): Disparity map computed from left image.
+            left_img (np.ndarray): Grayscale image from left camera.
+            right_img (np.ndarray): Grayscale image from right camera.
+
+        Returns:
+            np.ndarray: Filtered disparity map with improved quality.
+
+        Raises:
+            AssertionError: If right_matcher or stereo model is not instantiated.
+
+        Note:
+            - Requires right_match and stereo attributes to be initialized.
+            - Uses wls_sigma for both lambda and sigma color parameters.
+            - Disparity values are scaled by 16.0 before filtering as OpenCV's
+              stereo block matching returns disparities in CV_16S format multiplied by 16.
+        """
+
+        assert self.right_match is not None, "right_matcher not instantiated!"
+        assert self.stereo is not None, "stereo model not instantiated!"
+
+        right_disp = self.right_match.compute(right_img, left_img).astype(np.float32) / 16.0
+        wls_filter = cv2.ximgproc.createDisparityWLSFilter(self.stereo)
+        wls_filter.setLambda(self.wls_sigma)
+        wls_filter.setSigmaColor(self.wls_sigma)
+        return wls_filter.filter(left_disparity, left_img, disparity_map_right=right_disp)
 
     def myReprojectImageTo3D(self, disparity: np.ndarray, Q: np.ndarray):
         """
@@ -81,7 +122,19 @@ class StereoDepthEstimatorBase(ABC):
         return points.astype(np.float32)
 
     def run(self, frame: tuple[np.ndarray, np.ndarray], Q: np.ndarray):
-        disparity = self.calc_disparity(frame)
+
+        left_img, right_img = frame
+        left_gray = cv2.cvtColor(left_img, cv2.COLOR_BGR2GRAY)
+        right_gray = cv2.cvtColor(right_img, cv2.COLOR_BGR2GRAY)
+
+        disparity = self.calc_disparity(left_gray, right_gray)
+        if self.wls_filter:
+            disparity = self.apply_wls_filter(disparity, left_gray, right_gray)
+
+        # More post-processing to change funky results
+        disparity[disparity < 0] = 0
+        assert not np.isinf(disparity).any(), "Disparity map contains infinity."
+
         points_3D = self.reprojectImageTo3D(disparity, Q)
         points_3D[np.isinf(points_3D)] = 0
         return points_3D, disparity

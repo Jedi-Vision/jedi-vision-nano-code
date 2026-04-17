@@ -75,29 +75,20 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
         self.wls_lambda = wls_lambda
         self.wls_sigma = wls_sigma
 
-    def calc_disparity(self, frame: tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+    def calc_disparity(self, left_img: np.ndarray, right_img: np.ndarray) -> np.ndarray:
         """
         Compute the disparity map from a pair of stereo images.
 
         Args:
-            frame: Tuple of (left_img, right_img), both as np.ndarray.
+            left_gray (np.ndarray): Grayscale image from left camera.
+            right_gray (np.ndarray): Grayscale image from right camera.
 
         Returns:
             Disparity map as np.ndarray (float32).
         """
-        left_img, right_img = frame
-        left_gray = cv2.cvtColor(left_img, cv2.COLOR_BGR2GRAY)
-        right_gray = cv2.cvtColor(right_img, cv2.COLOR_BGR2GRAY)
         # Divide by 16.0, as OpenCV's stereo block matching returns disparities in CV_16S format multiplied by 16.
-        disparity = self.stereo.compute(left_gray, right_gray).astype(np.float32) / 16.0
-        if self.wsl_filter:
-            right_disp = self.right_match.compute(right_gray, left_gray).astype(np.float32) / 16.0
-            wls_filter = cv2.ximgproc.createDisparityWLSFilter(self.stereo)
-            wls_filter.setLambda(self.wls_sigma)
-            wls_filter.setSigmaColor(self.wls_sigma)
-            disparity = wls_filter.filter(disparity, left_gray, disparity_map_right=right_disp)
-        disparity[disparity < 0] = 0
-        assert not np.isinf(disparity).any(), "Disparity map contains infinity."
+        disparity = self.stereo.compute(left_img, right_img).astype(np.float32) / 16.0
+
         return disparity
 
 
