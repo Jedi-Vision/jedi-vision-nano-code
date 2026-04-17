@@ -1,8 +1,9 @@
 import numpy as np
 import vpi
+from .base import StereoDepthEstimatorBase
 
 
-class VPIDepthEstimator:
+class VPIDepthEstimator(StereoDepthEstimatorBase):
     """
     Drop-in replacement depth estimator using NVIDIA VPI stereo disparity.
 
@@ -12,10 +13,7 @@ class VPIDepthEstimator:
     """
 
     def __init__(self, config):
-        # Core stereo parameters
-        self.baseline = config.get("baseline", 0.1)  # meters
-        self.focal_length = config.get("focal_length_px", 500.0)  # pixels
-        self.max_disparity = config.get("max_disparity", 64)
+        self.max_disparity = config.get("num_disparities", 16*6)
 
         # Output control
         self.return_depth = config.get("return_depth", True)
@@ -27,7 +25,7 @@ class VPIDepthEstimator:
         # Performance: persist backend context
         self._backend_ctx = vpi.Backend(self.backend)
 
-    def compute(self, left_img, right_img):
+    def calc_disparity(self, left_img, right_img):
         """
         Main entry point (matches repo convention)
 
@@ -61,16 +59,7 @@ class VPIDepthEstimator:
 
             disp_np = disparity.cpu().astype(np.float32)
 
-        # Clean invalid disparities
-        disp_np[disp_np <= 0] = np.nan
-
-        if not self.return_depth:
-            return disp_np
-
-        return self._disparity_to_depth(disp_np)
-
-    def _disparity_to_depth(self, disparity):
-        return (self.focal_length * self.baseline) / disparity
+        return disp_np
 
     def _to_gray(self, img):
         return np.dot(img[..., :3], [0.299, 0.587, 0.114]).astype(np.uint8)
