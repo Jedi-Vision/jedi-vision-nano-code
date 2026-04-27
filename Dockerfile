@@ -137,3 +137,28 @@ RUN apt-get update && apt-get install -y \
 # Fetch video
 RUN curl -L https://oregonstate.box.com/shared/static/3p1ohmn4tm6ytwccnp3tdvtbiybk4c53.mp4 -o examples/videos/sidewalk_pov.mp4
 RUN curl -L https://oregonstate.box.com/shared/static/neyzpi2f42knbavdvdcvcpdir1zqm3o7.mov -o examples/videos/two_people.mov
+
+# -----------------------------
+# Install NVIDIA VPI
+# -----------------------------
+
+# Install packages required by add-apt-repository
+RUN apt-get update && \
+    apt-get install gnupg software-properties-common
+ 
+# Add Jetson public APT repository
+RUN apt-key adv --fetch-key https://repo.download.nvidia.com/jetson/jetson-ota-public.asc && \
+    add-apt-repository 'deb https://repo.download.nvidia.com/jetson/common r36.4 main'
+ 
+# Install VPI depedencies
+RUN apt-get update && apt-get install libnpp-13-0 libcufft-13-0 cuda-cudart-13-0 libegl1-mesa
+ 
+# Add CUDA packages to library path
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-13-0/targets/aarch64-linux/lib/
+ 
+# This is a temporary workaround required to install pva-allow-2 in docker which will not be necessary next release
+RUN apt-get install pva-allow-2 || true && rm /var/lib/dpkg/info/pva-allow-2.post* && dpkg --configure pva-allow-2
+ 
+# Install VPI
+RUN apt-get install libnvvpi3 vpi-dev vpi-samples
+RUN apt install python3.10-vpi4
