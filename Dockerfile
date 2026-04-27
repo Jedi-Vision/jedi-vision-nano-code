@@ -151,7 +151,7 @@ RUN apt-key adv --fetch-key https://repo.download.nvidia.com/jetson/jetson-ota-p
     add-apt-repository 'deb https://repo.download.nvidia.com/jetson/common r36.4 main'
  
 # Install VPI depedencies
-RUN apt-get update && apt-get install -y libnpp-12-2 libcufft-12-6 cuda-cudart-12-6 libegl1-mesa
+RUN apt-get update && apt-get install -y libnpp-12-6 libcufft-12-6 cuda-cudart-12-6 libegl1-mesa
  
 # Add CUDA packages to library path
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12-6/targets/aarch64-linux/lib/
