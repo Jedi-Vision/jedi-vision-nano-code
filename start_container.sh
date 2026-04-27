@@ -20,6 +20,9 @@ DOCKER_ARGS=(
     -v /dev:/dev
     -e "DISPLAY=${DISPLAY:-}"
     -v /etc/machine-id:/etc/machine-id:ro
+    --device nvidia.com/gpu=all 
+    --device nvidia.com/pva=all 
+    -it
 )
 
 if [[ -z "${HOST_PULSE_SERVER}" && -S "${HOST_PULSE_DIR}/native" ]]; then
