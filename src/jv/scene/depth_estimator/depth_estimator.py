@@ -69,7 +69,7 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
         self.stereo.setSpeckleWindowSize(speckle_window_size)
         self.stereo.setSpeckleRange(speckle_range)
 
-        self.wsl_filter = self.wsl_filter
+        self.wls_filter = self.wls_filter
         if wls_filter:
             self.right_match = cv2.ximgproc.createRightMatcher(self.stereo)
         self.wls_lambda = wls_lambda
@@ -178,7 +178,7 @@ class SGBMStereoDepthEstimator(BMStereoDepthEstimator):
             speckleRange=speckle_range,
         )
 
-        self.wsl_filter = wls_filter
+        self.wls_filter = wls_filter
         if wls_filter:
             self.right_match = cv2.ximgproc.createRightMatcher(self.stereo)
         self.wls_lambda = wls_lambda
