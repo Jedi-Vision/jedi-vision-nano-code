@@ -151,10 +151,10 @@ RUN apt-key adv --fetch-key https://repo.download.nvidia.com/jetson/jetson-ota-p
     add-apt-repository 'deb https://repo.download.nvidia.com/jetson/common r36.4 main'
  
 # Install VPI depedencies
-RUN apt-get update && apt-get install -y libnpp-13-0 libcufft-13-0 cuda-cudart-13-0 libegl1-mesa
+RUN apt-get update && apt-get install -y libnpp-12-2 libcufft-12-6 cuda-cudart-12-6 libegl1-mesa
  
 # Add CUDA packages to library path
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-13-0/targets/aarch64-linux/lib/
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12-6/targets/aarch64-linux/lib/
  
 # This is a temporary workaround required to install pva-allow-2 in docker which will not be necessary next release
 RUN apt-get install -y pva-allow-2 || true && rm /var/lib/dpkg/info/pva-allow-2.post* && dpkg --configure pva-allow-2
