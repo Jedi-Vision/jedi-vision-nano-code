@@ -6,6 +6,7 @@ ENV CUDA_HOME=/usr/local/cuda
 ENV USE_NINJA=1
 ENV MAX_JOBS=4
 ENV VCPKG_ROOT=/opt/vcpkg
+ENV PULSE_SERVER=unix:/tmp/pulse/native
 
 # Override NVIDIA's baked-in pip env vars
 ENV PIP_INDEX_URL=https://pypi.jetson-ai-lab.io/jp6/cu126
@@ -88,6 +89,7 @@ RUN apt-get update && apt-get install -y \
     libasound2-plugins alsa-utils pulseaudio-utils \
     libglfw3-dev libxinerama-dev libxcursor-dev \
     xorg-dev libglu1-mesa-dev
+RUN printf "pcm.!default {\n  type pulse\n}\n\nctl.!default {\n  type pulse\n}\n" > /etc/asound.conf
 WORKDIR /opt
 RUN git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}" && \
     "${VCPKG_ROOT}/bootstrap-vcpkg.sh" && \
