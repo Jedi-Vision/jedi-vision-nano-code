@@ -1,7 +1,8 @@
 from jv.audio import ObjectBuffer
 from jv.representation import YoloObjectRepresentationModel
 from jv.scene import VideoDepthAnything, MODEL_CONFIGS
-from jv.scene import SGBMStereoDepthEstimator, BMStereoDepthEstimator
+from jv.scene.depth_estimator import SGBMStereoDepthEstimator, BMStereoDepthEstimator
+from jv.scene import sample
 from jv.rectification import Rectifier
 from jv.camera import FrameBuffer
 from jv.representation.data import ObjectRepData, ObjectCoordData, Object2DCoordData
@@ -133,6 +134,9 @@ class Driver:
                         speckle_window_size=depth_kwargs.get('speckle_window_size', 100),
                         speckle_range=depth_kwargs.get('speckle_range', 32),
                         max_depth=depth_kwargs.get('max_depth', 10000),
+                        wls_filter=depth_kwargs.get('wls_filter', False),
+                        wls_lambda=depth_kwargs.get('wls_lambda', 8000),
+                        wls_sigma=depth_kwargs.get('wls_sigma', 1.5),
                     )
                 case "bm":
                     self.depth_estimator = BMStereoDepthEstimator(
@@ -145,6 +149,9 @@ class Driver:
                         speckle_window_size=depth_kwargs.get('speckle_window_size', 100),
                         speckle_range=depth_kwargs.get('speckle_range', 32),
                         max_depth=depth_kwargs.get('max_depth', 10000),
+                        wls_filter=depth_kwargs.get('wls_filter', False),
+                        wls_lambda=depth_kwargs.get('wls_lambda', 8000),
+                        wls_sigma=depth_kwargs.get('wls_sigma', 1.5),
                     )
             self.rectifier = Rectifier(
                 calibration_data=load_calibration_data(depth_kwargs.get("calibration_data", "camera_calibration.yaml")),
@@ -211,45 +218,13 @@ class Driver:
 
                 # For each object from the 2d (x,y) coordinate we get the 3d (X,Y,Z)
                 # convert to meters as well
-                def two_to_three(obj: Object2DCoordData):
-                    x1, y1, x2, y2 = map(int, (obj.x1, obj.y1, obj.x2, obj.y2))
+                def two_to_three(obj: Object2DCoordData):  # type: ignore
 
-                    # Extract the region of interest from the reprojection map (depth)
-                    roi = depth[y1:y2, x1:x2]
-                    z_values = roi[..., 2]
-
-                    # Exclude zero or invalid values when computing depths
-                    valid_mask = (z_values > 0) & np.isfinite(z_values)
-
-                    # If there is a valid mask of non-zero depths for the given prediction
-                    # then we take a Gaussian-weighted average to derive the x and y
-                    # coordinates of the object, and get the minimum (non-zero) depth
-                    # value
-                    if valid_mask.any():
-                        min_z = np.min(z_values[valid_mask])
-
-                        h, w = roi.shape[:2]
-                        cx, cy = w / 2.0, h / 2.0
-                        yy, xx = np.mgrid[:h, :w]
-
-                        # Weights derived from Gaussian kernel based on distance from bounding box center
-                        sigma = max(min(h, w) / 4.0, 1.0)
-                        weights = np.exp(-((xx - cx)**2 + (yy - cy)**2) / (2 * sigma**2))
-
-                        x_values = roi[..., 0]
-                        y_values = roi[..., 1]
-
-                        avg_x = np.average(x_values[valid_mask], weights=weights[valid_mask])
-                        avg_y = np.average(y_values[valid_mask], weights=weights[valid_mask])
-                    else:
-                        min_z, avg_x, avg_y = 0.0, 0.0, 0.0
-
-                    return ObjectCoordData(
-                        id=obj.id,
-                        label=obj.label,
-                        x=float(avg_x * DEPTH_CONV),
-                        y=float(avg_y * DEPTH_CONV),
-                        depth=float(min_z * DEPTH_CONV)
+                    return sample(
+                        obj,
+                        depth,
+                        sample_method=self.depth_kwargs.get("sample_method", "gauss"),
+                        depth_conv=DEPTH_CONV
                     )
 
             else:  # Use monocular depth model

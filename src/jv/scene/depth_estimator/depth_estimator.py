@@ -32,6 +32,13 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
             speckle filtering, set the parameter to a positive value, it will be implicitly
             multiplied by 16. Normally, 1 or 2 is good enough.
         max_depth: Maximum depth value (in mm) to keep. Points beyond this are zeroed out.
+        wls_filter: Whether to enable Weighted Least Squares (WLS) filtering for post-processing
+            the disparity map. When enabled, applies left-right consistency checking and filtering
+            to reduce artifacts and improve depth map quality. Defaults to False.
+        wls_lambda: Regularization amount for smoothing. Larger values preserve more details but may 
+            retain more noise. Only used when wls_filter is True. Defaults to 8000.
+        wls_sigma: Controls sensitivity of filter to edges. Only used when wls_filter is True.
+            Defaults to 1.5. Typically ranges between 0.8 and 2.0.
     """
     def __init__(
         self,
@@ -43,6 +50,9 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
         speckle_window_size: int = 100,
         speckle_range: int = 2,
         max_depth: float = 10000.,
+        wls_filter: bool = False,
+        wls_lambda: float = 8000.,
+        wls_sigma: float = 1.5,
     ):
         super().__init__(max_depth)
         assert num_disparities > 0 and num_disparities % 16 == 0, \
@@ -59,23 +69,26 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
         self.stereo.setSpeckleWindowSize(speckle_window_size)
         self.stereo.setSpeckleRange(speckle_range)
 
-    def calc_disparity(self, frame: tuple[np.ndarray, np.ndarray]) -> np.ndarray:
+        self.wls_filter = self.wls_filter
+        if wls_filter:
+            self.right_match = cv2.ximgproc.createRightMatcher(self.stereo)
+        self.wls_lambda = wls_lambda
+        self.wls_sigma = wls_sigma
+
+    def calc_disparity(self, left_img: np.ndarray, right_img: np.ndarray) -> np.ndarray:
         """
         Compute the disparity map from a pair of stereo images.
 
         Args:
-            frame: Tuple of (left_img, right_img), both as np.ndarray.
+            left_gray (np.ndarray): Grayscale image from left camera.
+            right_gray (np.ndarray): Grayscale image from right camera.
 
         Returns:
             Disparity map as np.ndarray (float32).
         """
-        left_img, right_img = frame
-        left_gray = cv2.cvtColor(left_img, cv2.COLOR_BGR2GRAY)
-        right_gray = cv2.cvtColor(right_img, cv2.COLOR_BGR2GRAY)
         # Divide by 16.0, as OpenCV's stereo block matching returns disparities in CV_16S format multiplied by 16.
-        disparity = self.stereo.compute(left_gray, right_gray).astype(np.float32) / 16.0
-        disparity[disparity < 0] = 0
-        assert not np.isinf(disparity).any(), "Disparity map contains infinity."
+        disparity = self.stereo.compute(left_img, right_img).astype(np.float32) / 16.0
+
         return disparity
 
 
@@ -114,6 +127,13 @@ class SGBMStereoDepthEstimator(BMStereoDepthEstimator):
             speckle filtering, set the parameter to a positive value, it will be implicitly
             multiplied by 16. Normally, 1 or 2 is good enough.
         max_depth: Maximum depth value (in mm) to keep. Points beyond this are zeroed out.
+        wls_filter: Whether to enable Weighted Least Squares (WLS) filtering for post-processing
+            the disparity map. When enabled, applies left-right consistency checking and filtering
+            to reduce artifacts and improve depth map quality. Defaults to False.
+        wls_lambda: Regularization amount for smoothing. Larger values preserve more details but may 
+            retain more noise. Only used when wls_filter is True. Defaults to 8000.
+        wls_sigma: Controls sensitivity of filter to edges. Only used when wls_filter is True.
+            Defaults to 1.5. Typically ranges between 0.8 and 2.0.
     """
     def __init__(
         self,
@@ -128,6 +148,9 @@ class SGBMStereoDepthEstimator(BMStereoDepthEstimator):
         speckle_window_size: int = 100,
         speckle_range: int = 2,
         max_depth: float = 10000.,
+        wls_filter: bool = False,
+        wls_lambda: float = 8000.,
+        wls_sigma: float = 1.5,
     ):
         self.max_depth = max_depth
         assert num_disparities > 0 and num_disparities % 16 == 0, \
@@ -154,3 +177,9 @@ class SGBMStereoDepthEstimator(BMStereoDepthEstimator):
             speckleWindowSize=speckle_window_size,
             speckleRange=speckle_range,
         )
+
+        self.wls_filter = wls_filter
+        if wls_filter:
+            self.right_match = cv2.ximgproc.createRightMatcher(self.stereo)
+        self.wls_lambda = wls_lambda
+        self.wls_sigma = wls_sigma

@@ -17,6 +17,9 @@ DOCKER_ARGS=(
     -v /run/user/1000/pulse/native:/tmp/pulse/native
     -v "$HOME/.config/pulse/cookie:/root/.config/pulse/cookie:ro"
     -v /etc/machine-id:/etc/machine-id:ro
+    --device nvidia.com/gpu=all 
+    --device nvidia.com/pva=all 
+    -it
 )
 
 echo "Routing container audio through host PulseAudio (unix:/tmp/pulse/native)."

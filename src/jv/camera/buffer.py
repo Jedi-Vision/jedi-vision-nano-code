@@ -141,11 +141,9 @@ class FrameBuffer:
             if self.frame_skip != 0 and frame_count % self.frame_skip != 0:
                 continue
 
-            # Ensure that throughput does not exceed video framerate
-            time.sleep(1 / self.frame_rate)
-
             if not ret_left or not ret_right:
                 break
+
             if self.q.full():
                 self.q.get(timeout=0.001)  # Remove the oldest frame to make space
 
@@ -169,6 +167,9 @@ class FrameBuffer:
             # Add both frames to the queue
             self.q.put(((frame_left, frame_right), frame_count, timestamp_ms), timeout=0.001)
 
+            # Ensure that throughput does not exceed video framerate
+            time.sleep(1 / self.frame_rate)
+
     def _capture_frames(self):
         """Worker for capturing frames from a single camera and storing them in the queue."""
         frame_count = 0
@@ -186,16 +187,17 @@ class FrameBuffer:
             if self.frame_skip != 0 and frame_count % self.frame_skip != 0:
                 continue
 
-            # Ensure that throughput does not exceed video framerate
-            time.sleep(1 / self.frame_rate)
-
             if not ret:
                 break
+
             if self.q.full():
                 self.q.get(timeout=0.001)  # Remove the oldest frame to make space
 
             # Add frame to the queue
             self.q.put(((frame,), frame_count, timestamp_ms), timeout=0.001)
+
+            # Ensure that throughput does not exceed video framerate
+            time.sleep(1 / self.frame_rate)
 
     def get(self):
         """

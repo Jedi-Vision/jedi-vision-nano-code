@@ -45,6 +45,10 @@ stereo:
     calibration_data: camera_calibration.yaml
     left_sensor_id: 1  # if set to string then can open filepath
     right_sensor_id: 0  # if set to string then can open filepath
+    sample_method: gauss
+    wls_filter: true
+    wls_lambda: 8000  # Regularization for WLS smoothness
+    wls_sigma: 1.5  # Sensitivty of filter to edges (0.8 - 2.0)
 
 gstreamer:
     sensor_mode: 4  # (1280x720, 59.9999 fps)

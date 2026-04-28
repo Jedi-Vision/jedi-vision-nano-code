@@ -10,7 +10,7 @@ def get_video_writer(filename, frame_shape, fps):
     return cv2.VideoWriter(filename, fourcc, fps, (width, height))
 
 
-def record_binocular(frame_rate, frame_skip, buffer_size, warmup, gstreamer_kwargs, left_path, right_path, max_frames=None):
+def record_binocular(frame_rate, frame_skip, buffer_size, warmup, gstreamer_kwargs, left_path, right_path, show=False, max_frames=None):
     print("=== Binocular FrameBuffer Record ===")
     print(f"  Frame rate       : {frame_rate}")
     print(f"  Frame skip       : {frame_skip}")
@@ -56,10 +56,11 @@ def record_binocular(frame_rate, frame_skip, buffer_size, warmup, gstreamer_kwar
             frame_count += 1
 
             # Optionally display for feedback
-            combined = np.hstack((frame_left, frame_right))
-            cv2.imshow("Recording (Left | Right)", combined)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            if show:
+                combined = np.hstack((frame_left, frame_right))
+                cv2.imshow("Recording (Left | Right)", combined)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 
             if max_frames is not None and frame_count >= max_frames:
                 print(f"Reached max_frames={max_frames}")
@@ -92,6 +93,7 @@ def main():
     parser.add_argument("--left-path", type=str, default="left.mp4", help="Output path for left video")
     parser.add_argument("--right-path", type=str, default="right.mp4", help="Output path for right video")
     parser.add_argument("--max-frames", type=int, default=None, help="Maximum number of frames to record (default: unlimited)")
+    parser.add_argument("--show", type=bool, default=False, help="Show display")
 
     args = parser.parse_args()
 

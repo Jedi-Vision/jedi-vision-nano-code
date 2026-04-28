@@ -40,7 +40,7 @@ class ObjectBuffer:
         self.output_to = output_to
         if self.output_to == "file":
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            self.output_file = open(f"/out/output_{timestamp}.jsonl", "w")
+            self.output_file = open(f"./out/output_{timestamp}.jsonl", "w")
 
     def start(self):
         self.socket = self.ctx.socket(zmq.REQ)
