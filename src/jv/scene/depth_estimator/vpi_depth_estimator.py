@@ -57,7 +57,7 @@ class VPIDepthEstimator(StereoDepthEstimatorBase):
                 maxdisp=self.max_disparity
             )
 
-            disp_np = disparity.cpu().astype(np.float32)
+            disp_np = disparity.cpu().astype(np.float32) * (1. / 16.)
 
         return disp_np
 

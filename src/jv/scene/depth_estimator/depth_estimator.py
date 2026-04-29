@@ -87,7 +87,7 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
             Disparity map as np.ndarray (float32).
         """
         # Divide by 16.0, as OpenCV's stereo block matching returns disparities in CV_16S format multiplied by 16.
-        disparity = self.stereo.compute(left_img, right_img).astype(np.float32) / 16.0
+        disparity = self.stereo.compute(left_img, right_img).astype(np.float32) * (1. / 16.)
 
         return disparity
 
