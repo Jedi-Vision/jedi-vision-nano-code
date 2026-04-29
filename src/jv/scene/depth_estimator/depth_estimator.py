@@ -84,10 +84,10 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
             right_gray (np.ndarray): Grayscale image from right camera.
 
         Returns:
-            Disparity map as np.ndarray (float64).
+            Disparity map as np.ndarray (float32).
         """
         # Divide by 16.0, as OpenCV's stereo block matching returns disparities in CV_16S format multiplied by 16.
-        disparity = self.stereo.compute(left_img, right_img).astype(np.float64) * (1. / 16.)
+        disparity = self.stereo.compute(left_img, right_img).astype(np.float32) * (1. / 16.)
 
         return disparity
 
