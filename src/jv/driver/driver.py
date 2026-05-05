@@ -159,8 +159,6 @@ class Driver:
                         wls_sigma=depth_kwargs.get('wls_sigma', 1.5),
                     )
                 case "vpi":
-                    if 'VPIDepthEstimator' not in sys.modules:
-                        raise ImportError("Tried to use vpi option but VPI is not imported.")
                     self.depth_estimator = VPIDepthEstimator(
                         num_disparities=depth_kwargs.get('num_disparities', 16*6),
                         block_size=depth_kwargs.get('block_size', 5),
