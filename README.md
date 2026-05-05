@@ -260,3 +260,40 @@ NOTE: Using the Argus API for GStreamer to stream directly from the camera CSI r
 ### Calibrating Camera
 
 Camera's typically have distortion, and due to that they need to be calibrated to determine the extrinsic and intrinsic parameters, which can then be used to undistort an image. Read [this](https://docs.opencv.org/4.x/dc/dbb/tutorial_py_calibration.html) for more information.
+
+## I2S DAC and Amp Connection (via GPIO)
+
+Launch Jetson-IO:
+
+```bash
+sudo /opt/nvidia/jetson-io/jetson-io.py
+```
+
+Configure the pins as follows via the manual I2S template:
+
+```
+ =================== Jetson Expansion Header Tool ===================
+|                                                                    |
+|                                                                    |
+|                      3.3V (  1) .. (  2) 5V                        |
+|                      i2c8 (  3) .. (  4) 5V                        |
+|                      i2c8 (  5) .. (  6) GND                       |
+|                    unused (  7) .. (  8) uarta                     |
+|                       GND (  9) .. ( 10) uarta                     |
+|                    unused ( 11) .. ( 12) i2s2_sclk                 |
+|                    unused ( 13) .. ( 14) GND                       |
+|                    unused ( 15) .. ( 16) unused                    |
+|                      3.3V ( 17) .. ( 18) unused                    |
+|                    unused ( 19) .. ( 20) GND                       |
+|                    unused ( 21) .. ( 22) unused                    |
+|                    unused ( 23) .. ( 24) unused                    |
+|                       GND ( 25) .. ( 26) unused                    |
+|                      i2c2 ( 27) .. ( 28) i2c2                      |
+|                    unused ( 29) .. ( 30) GND                       |
+|                    unused ( 31) .. ( 32) unused                    |
+|                    unused ( 33) .. ( 34) GND                       |
+|                   i2s2_fs ( 35) .. ( 36) unused                    |
+|                    unused ( 37) .. ( 38) i2s2_din                  |
+|                       GND ( 39) .. ( 40) i2s2_dout                 |
+|====================================================================|
+```

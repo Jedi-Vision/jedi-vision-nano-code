@@ -1,6 +1,7 @@
 import numpy as np
 import vpi
 from .base import StereoDepthEstimatorBase
+import cv2
 
 
 class VPIDepthEstimator(StereoDepthEstimatorBase):
@@ -12,18 +13,38 @@ class VPIDepthEstimator(StereoDepthEstimatorBase):
     - Input images are numpy arrays (H, W) or (H, W, 3)
     """
 
-    def __init__(self, config):
-        self.max_disparity = config.get("num_disparities", 16*6)
-
-        # Output control
-        self.return_depth = config.get("return_depth", True)
-
-        # Backend selection
-        backend_str = config.get("backend", "cuda").upper()
-        self.backend = getattr(vpi.Backend, backend_str)
+    def __init__(
+        self,
+        num_disparities: int = 16 * 6,
+        block_size: int = 3,
+        min_disparity: int = 0,
+        P1: int | None = None,
+        P2: int | None = None,
+        disp12_max_diff: int = 1,
+        pre_filter_cap: int = 0,
+        uniqueness_ratio: int = 5,
+        speckle_window_size: int = 100,
+        speckle_range: int = 2,
+        max_depth: float = 10000.
+    ):
+        self.max_depth = max_depth
+        self.num_disparities = num_disparities
+        self.wls_filter = False  # not supported yet
+        assert num_disparities > 0 and num_disparities % 16 == 0, \
+            "num_disparities must be > 0 and divisible by 16"
+        assert block_size > 0 and block_size % 2 == 1, \
+            "block_size must be an odd number >= 1"
+        IMG_CHANNELS = 1
+        # P1: penalty on disparity change by +/- 1 between neighbor pixels
+        if P1 is None:
+            P1 = 8 * IMG_CHANNELS * block_size**2
+        # P2: penalty on disparity change by >1 between neighbor pixels, must be > P1
+        if P2 is None:
+            P2 = 32 * IMG_CHANNELS * block_size**2
+        assert P2 > P1, "P2 must be greater than P1"
 
         # Performance: persist backend context
-        self._backend_ctx = vpi.Backend(self.backend)
+        self._backend_ctx = vpi.Backend(vpi.Backend.CUDA)
 
     def calc_disparity(self, left_img, right_img):
         """
@@ -54,10 +75,10 @@ class VPIDepthEstimator(StereoDepthEstimatorBase):
                 left,
                 right,
                 window=5,
-                maxdisp=self.max_disparity
+                maxdisp=self.num_disparities
             )
 
-            disp_np = disparity.cpu().astype(np.float32)
+            disp_np = disparity.cpu().astype(np.float32) * (1. / 16.)
 
         return disp_np
 

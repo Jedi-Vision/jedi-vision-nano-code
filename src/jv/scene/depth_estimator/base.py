@@ -133,7 +133,8 @@ class StereoDepthEstimatorBase(ABC):
 
         # More post-processing to change funky results
         disparity[disparity < 0] = 0
-        assert not np.isinf(disparity).any(), "Disparity map contains infinity."
+        # assert not np.isinf(disparity).any(), "Disparity map contains infinity."
+        disparity[np.isinf(disparity)] = 0
 
         points_3D = self.reprojectImageTo3D(disparity, Q)
         points_3D[np.isinf(points_3D)] = 0

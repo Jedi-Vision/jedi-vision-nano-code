@@ -9,7 +9,7 @@ driver:
     vda_model_name: vits
     chkpts_folder: ./checkpoints
     retain_frames: 30
-    object_buffer_size: 0
+    object_buffer_size: 1
     frame_buffer_size: 1
     warmup_frames: 30
     camera_index: 0

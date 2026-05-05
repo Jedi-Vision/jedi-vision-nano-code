@@ -103,7 +103,8 @@ RUN pip install .
 RUN sed -i '/torch/d' requirements.txt && \
     sed -i '/torchvision/d' requirements.txt && \
     sed -i '/transformers/d' requirements.txt && \
-    sed -i '/numpy/d' requirements.txt
+    sed -i '/numpy/d' requirements.txt && \
+    sed -i '/opencv-contrib-python/d' requirements.txt
 RUN pip install -r requirements.txt
 RUN bash get_weights.sh
 
