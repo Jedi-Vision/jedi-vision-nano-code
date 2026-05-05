@@ -6,7 +6,7 @@ try:
     from jv.scene.depth_estimator import VPIDepthEstimator
 except ImportError:
     print("VPI is not installed, skipping import...")
-from jv.scene import sample
+from jv.scene import sample, kalman
 from jv.rectification import Rectifier
 from jv.camera import FrameBuffer
 from jv.representation.data import ObjectRepData, ObjectCoordData, Object2DCoordData
@@ -16,7 +16,8 @@ import cv2
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
+from collections import defaultdict
+
 
 from jv.management import SystemManagement, log_block
 sys_mgmt = SystemManagement()
@@ -193,6 +194,8 @@ class Driver:
         self.object_kwargs = object_kwargs
         self.depth_kwargs = depth_kwargs
 
+        self.kalman_states: dict[int, tuple[np.ndarray, np.ndarray]] = {}  # Store kalman filter state
+
         # Log system configuration at startup
         sys_mgmt.updateSetting("device", device)
         sys_mgmt.updateSetting("frame_rate", frame_rate)
@@ -237,12 +240,17 @@ class Driver:
                 # convert to meters as well
                 def two_to_three(obj: Object2DCoordData):  # type: ignore
 
-                    return sample(
+                    object = sample(
                         obj,
                         depth,
                         sample_method=self.depth_kwargs.get("sample_method", "gauss"),
                         depth_conv=DEPTH_CONV
                     )
+
+                    object, state = kalman(object, self.kalman_states.get(object.id))
+                    self.kalman_states[object.id] = state
+
+                    return object
 
             else:  # Use monocular depth model
                 frame = cv2.cvtColor(frame[0], cv2.COLOR_BGR2RGB)  # Convert BGR to RGB for VDA
