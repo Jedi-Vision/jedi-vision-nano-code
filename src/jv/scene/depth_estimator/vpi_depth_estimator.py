@@ -29,6 +29,7 @@ class VPIDepthEstimator(StereoDepthEstimatorBase):
     ):
         self.max_depth = max_depth
         self.num_disparities = num_disparities
+        self.wls_filter = False  # not supported yet
         assert num_disparities > 0 and num_disparities % 16 == 0, \
             "num_disparities must be > 0 and divisible by 16"
         assert block_size > 0 and block_size % 2 == 1, \
