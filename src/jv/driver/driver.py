@@ -2,6 +2,10 @@ from jv.audio import ObjectBuffer
 from jv.representation import YoloObjectRepresentationModel
 from jv.scene import VideoDepthAnything, MODEL_CONFIGS
 from jv.scene.depth_estimator import SGBMStereoDepthEstimator, BMStereoDepthEstimator
+try:
+    from jv.scene.depth_estimator import VPIDepthEstimator
+except ImportError:
+    print("VPI is not installed, skipping import...")
 from jv.scene import sample
 from jv.rectification import Rectifier
 from jv.camera import FrameBuffer
@@ -12,6 +16,7 @@ import cv2
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 from jv.management import SystemManagement, log_block
 sys_mgmt = SystemManagement()
@@ -152,6 +157,20 @@ class Driver:
                         wls_filter=depth_kwargs.get('wls_filter', False),
                         wls_lambda=depth_kwargs.get('wls_lambda', 8000),
                         wls_sigma=depth_kwargs.get('wls_sigma', 1.5),
+                    )
+                case "vpi":
+                    if 'VPIDepthEstimator' not in sys.modules:
+                        raise ImportError("Tried to use vpi option but VPI is not imported.")
+                    self.depth_estimator = VPIDepthEstimator(
+                        num_disparities=depth_kwargs.get('num_disparities', 16*6),
+                        block_size=depth_kwargs.get('block_size', 5),
+                        min_disparity=depth_kwargs.get('min_disparity', 0),
+                        pre_filter_cap=depth_kwargs.get('pre_filter_cap', 1) if
+                        depth_kwargs.get('pre_filter_cap', 1) > 0 else 1,
+                        uniqueness_ratio=depth_kwargs.get('uniqueness_ratio', 5),
+                        speckle_window_size=depth_kwargs.get('speckle_window_size', 100),
+                        speckle_range=depth_kwargs.get('speckle_range', 32),
+                        max_depth=depth_kwargs.get('max_depth', 10000),
                     )
             self.rectifier = Rectifier(
                 calibration_data=load_calibration_data(depth_kwargs.get("calibration_data", "camera_calibration.yaml")),
