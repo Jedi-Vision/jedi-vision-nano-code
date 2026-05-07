@@ -172,6 +172,7 @@ RUN apt-get install -y libnvvpi3 vpi3-dev vpi3-samples
 RUN apt install python3.10-vpi3
 
 RUN echo "xxxxxx" && git pull
+RUN pip install .
 
 COPY entrypoint.sh /entrypoint.sh
 
