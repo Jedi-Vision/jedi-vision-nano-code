@@ -9,12 +9,13 @@ fi
 
 echo "Starting app..."
 
-python3 main.py \
-    -c config/nano.yaml \
-    -a output_to:socket \
-    >> /workspace/jv/logs/detect.log 2>&1 &
+cd src/spatial-audio
 
-PID1=$!
+cmake --preset vcpkg
+
+cmake --build build -j
+
+cd ../..
 
 ./src/spatial-audio/build/jsa-live-3d \
     --ipc ipc:///tmp/jv/audio/0.sock \
@@ -26,11 +27,18 @@ PID1=$!
     --source-mode tones \
     >> /workspace/jv/logs/audio.log 2>&1 &
 
+PID1=$!
+
+python3 main.py \
+    -c config/nano.yaml \
+    -a output_to:socket \
+    >> /workspace/jv/logs/detect.log 2>&1 &
+
 PID2=$!
 
 echo "Processes started:"
-echo "main.py PID: $PID1"
-echo "audio PID:   $PID2"
+echo "audio PID:   $PID1"
+echo "main.py PID: $PID2"
 
 # Forward signals properly
 trap 'kill -TERM $PID1 $PID2 2>/dev/null' SIGINT SIGTERM
