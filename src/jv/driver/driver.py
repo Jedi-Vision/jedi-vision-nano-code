@@ -48,6 +48,7 @@ class Driver:
         depth: bool = True,
         metric: bool = False,
         multi_object: bool = False,
+        use_kalman: bool = False,
         gstreamer_kwargs: dict = {},
         object_kwargs: dict = {},
         depth_kwargs: dict = {},
@@ -116,6 +117,7 @@ class Driver:
         self.depth = depth
         self.binocular = binocular
         self.multi_object = multi_object
+        self.use_kalman = use_kalman
 
         # Binocular depth
         if self.binocular:
@@ -258,8 +260,9 @@ class Driver:
                         depth_conv=DEPTH_CONV
                     )
 
-                    object, state = kalman(object, self.kalman_states.get(object.id))
-                    self.kalman_states[object.id] = state
+                    if self.use_kalman:
+                        object, state = kalman(object, self.kalman_states.get(object.id))
+                        self.kalman_states[object.id] = state
 
                     return object
 
