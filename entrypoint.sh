@@ -3,6 +3,8 @@ set -Eeuo pipefail
 
 mkdir -p /workspace/jv/logs
 
+unset DISPLAY
+
 echo "Starting app..."
 
 python3 main.py \
