@@ -26,6 +26,10 @@ echo "Routing container audio through host PulseAudio (unix:/tmp/pulse/native)."
 
 DOCKER_ARGS+=(jp61-orin-xformers)
 
+if [[ "${1:-}" == "visualize" ]]; then
+    DOCKER_ARGS+=(visualize)
+fi
+
 "${DOCKER_ARGS[@]}"
 
 # Have privileged is lowkey sketchy but should be fine
