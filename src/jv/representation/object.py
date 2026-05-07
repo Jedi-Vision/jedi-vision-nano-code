@@ -275,12 +275,13 @@ class YoloObjectRepresentationModel(AbstractModelClass):
 
     def process(self, input, **kwargs) -> Results:
         kwargs.pop("show_det")
-        kwargs.pop("det_whitelist")
+        classes: set = kwargs.pop("det_whitelist", None)
 
         return self.model.track(
             input,
             persist=True,
             device=self.device,
+            classes=list(classes),
             **kwargs
         )[0]
 
