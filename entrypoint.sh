@@ -9,14 +9,6 @@ fi
 
 echo "Starting app..."
 
-cd src/spatial-audio
-
-cmake --preset vcpkg
-
-cmake --build build -j
-
-cd ../..
-
 ./src/spatial-audio/build/jsa-live-3d \
     --ipc ipc:///tmp/jv/audio/0.sock \
     --audio-buffer-ms 120 \
