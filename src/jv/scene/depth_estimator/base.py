@@ -17,6 +17,9 @@ class StereoDepthEstimatorBase(ABC):
         self.stereo = None
         self.wls_sigma = False
         self.wls_filter = False
+        # enable/disable median filtering of disparity
+        self.med_filter = False
+        self.ksize = None
 
     @abstractmethod
     def calc_disparity(self, left_img: np.ndarray, right_img: np.ndarray) -> np.ndarray:
@@ -68,6 +71,27 @@ class StereoDepthEstimatorBase(ABC):
         wls_filter.setLambda(self.wls_sigma)
         wls_filter.setSigmaColor(self.wls_sigma)
         return wls_filter.filter(left_disparity, left_img, disparity_map_right=right_disp)
+    
+    def apply_med_filter(self, disparity):
+        """
+        Apply a 3x3 median filter to the disparity map to reduce salt-and-pepper noise.
+
+        Args:
+            disparity (np.ndarray): Input disparity map (any numeric dtype).
+
+        Returns:
+            np.ndarray: Median-filtered disparity map with same dtype as input.
+        """
+        # OpenCV medianBlur expects single-channel images; it accepts float32 on modern builds.
+        dtype = disparity.dtype
+        # Ensure we have a contiguous array
+        disp = disparity.copy()
+        try:
+            filtered = cv2.medianBlur(disp, ksize=self.ksize)
+        except Exception:
+            # Fallback: convert to float32 then back
+            filtered = cv2.medianBlur(disp.astype(np.float32), 3).astype(dtype)
+        return filtered
 
     def myReprojectImageTo3D(self, disparity: np.ndarray, Q: np.ndarray):
         """
@@ -130,6 +154,9 @@ class StereoDepthEstimatorBase(ABC):
         disparity = self.calc_disparity(left_gray, right_gray)
         if self.wls_filter:
             disparity = self.apply_wls_filter(disparity, left_gray, right_gray)
+
+        if self.med_filter:
+            disparity = self.apply_med_filter(disparity)
 
         # More post-processing to change funky results
         disparity[disparity < 0] = 0

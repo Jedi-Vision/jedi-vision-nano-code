@@ -148,6 +148,8 @@ class Driver:
                         wls_filter=depth_kwargs.get('wls_filter', False),
                         wls_lambda=depth_kwargs.get('wls_lambda', 8000),
                         wls_sigma=depth_kwargs.get('wls_sigma', 1.5),
+                        med_filter=depth_kwargs.get('med_filter', False),
+                        ksize=depth_kwargs.get('ksize', 3),
                     )
                 case "bm":
                     self.depth_estimator = BMStereoDepthEstimator(
@@ -163,6 +165,8 @@ class Driver:
                         wls_filter=depth_kwargs.get('wls_filter', False),
                         wls_lambda=depth_kwargs.get('wls_lambda', 8000),
                         wls_sigma=depth_kwargs.get('wls_sigma', 1.5),
+                        med_filter=depth_kwargs.get('med_filter', False),
+                        ksize=depth_kwargs.get('ksize', 3),
                     )
                 case "vpi":
                     self.depth_estimator = VPIDepthEstimator(
@@ -294,7 +298,7 @@ class Driver:
                 objects = [min(objects, key=lambda obj: (not np.isfinite(obj.depth), obj.depth))]
                 # Should only be one object, set id manually to 1
                 objects[0].id = 1
-                print(f"Object.x: {objects[0].x}, Object.y: {objects[0].y}, Object.depth: {objects[0].depth}")
+                print(f"Object.x: {objects[0].x}, Object.y: {objects[0].y}, Object.depth: {objects[0].depth}, Object.id: {objects[0].id}")
 
             # Log depth statistics
             sys_mgmt.logMetric("depth.min", depth.min().item())  # TODO Review these metrics
