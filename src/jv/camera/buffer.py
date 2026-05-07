@@ -131,7 +131,7 @@ class FrameBuffer:
             ret_left, frame_left = self.capture_left.read()
             ret_right, frame_right = self.capture_right.read()
             frame_count += 1
-            timestamp_ms = frame_count * 1000 / self.frame_rate
+            timestamp_ms = time.time() * 1000
 
             # Warmup
             if frame_count < self.warmup_frames:
@@ -177,7 +177,7 @@ class FrameBuffer:
         while self.running:
             ret, frame = self.capture.read()
             frame_count += 1
-            timestamp_ms = frame_count * 1000 / self.frame_rate
+            timestamp_ms = time.time() * 1000
 
             # Warmup
             if frame_count < self.warmup_frames:
