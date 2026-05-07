@@ -98,6 +98,7 @@ RUN git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}" &
 WORKDIR /workspace/jedi-vision-nano-code/src/spatial-audio
 # Validate the spatial-audio toolchain without paying for a full build here.
 RUN cmake --preset vcpkg
+RUN cmake build --build -j
 WORKDIR /workspace/jedi-vision-nano-code
 RUN pip install .
 RUN sed -i '/torch/d' requirements.txt && \

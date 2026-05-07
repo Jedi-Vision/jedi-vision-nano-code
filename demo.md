@@ -37,7 +37,7 @@
    cd ../..
    ```
 
-7. Start the object detection with output to socket
+7. Start the object detection with output to socket (Note: Keep running this command until it works, irratic behaviour of the code)
 
    ```bash
    python3 main.py -c config/nano.yaml -a output_to:socket
@@ -57,10 +57,11 @@
     ./src/spatial-audio/build/jsa-live-3d \
     --ipc ipc:///tmp/jv/audio/1.sock \
     --audio-buffer-ms 120 \
-    --stream-timeout-ms 60 \
-    --audio-azimuth-scale 3 \
-    --audio-azimuth-max-deg 90
-    --tone-min-gap-ms 200
+    --max-interp-window-ms 25 \
+    --stale-frame-drop-ms 200 \
+    --audio-azimuth-scale 2.75 \
+    --audio-azimuth-max-deg 90 \
+    --tone-min-gap-ms 200 \
     --source-mode tones
    ```
 
@@ -68,8 +69,9 @@
     ./src/spatial-audio/build/jsa-live-3d \
     --ipc ipc:///tmp/jv/audio/1.sock \
     --audio-buffer-ms 120 \
-    --stream-timeout-ms 60 \
-    --audio-azimuth-scale 3 \
-    --audio-azimuth-max-deg 90
+    --max-interp-window-ms 25 \
+
+    --audio-azimuth-scale 2.75 \
+    --audio-azimuth-max-deg 90 \
     --source-mode songs
    ```
