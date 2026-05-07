@@ -7,26 +7,57 @@ if [[ -z "${DISPLAY:-}" ]]; then
     unset DISPLAY
 fi
 
-echo "Starting app..."
+if [[ "${1:-}" == "visualize" ]]; then
+    echo "Starting app in visualize mode..."
 
-./src/spatial-audio/build/jsa-live-3d \
-    --ipc ipc:///tmp/jv/audio/0.sock \
-    --audio-buffer-ms 120 \
-    --stream-timeout-ms 60 \
-    --audio-azimuth-scale 3 \
-    --audio-azimuth-max-deg 90 \
-    --tone-min-gap-ms 200 \
-    --source-mode tones \
-    >> /workspace/jv/logs/audio.log 2>&1 &
+    DISPLAY=:0 ./src/spatial-audio/build/jsa-visual-monitor \
+        --ipc ipc:///tmp/jv/audio/0.sock \
+        --forward-ipc ipc:///tmp/jv/audio/1.sock \
+        >> /workspace/jv/logs/audio.log 2>&1 &
 
-PID1=$!
+    DISPLAY=:0 ./src/spatial-audio/build/jsa-live-3d \
+        --ipc ipc:///tmp/jv/audio/1.sock \
+        --audio-buffer-ms 120 \
+        --max-interp-window-ms 25 \
+        --stale-frame-drop-ms 200 \
+        --audio-azimuth-scale 2.75 \
+        --audio-azimuth-max-deg 90 \
+        --tone-min-gap-ms 200 \
+        --source-mode tones \
+        --hrtf default \
+        >> /workspace/jv/logs/audio.log 2>&1 &
 
-python3 main.py \
+    PID1=$!
+
+    DISPLAY=:0 python3 main.py \
     -c config/nano.yaml \
     -a output_to:socket \
     >> /workspace/jv/logs/detect.log 2>&1 &
 
-PID2=$!
+    PID2=$!
+
+else
+    echo "Starting app..."
+
+    ./src/spatial-audio/build/jsa-live-3d \
+        --ipc ipc:///tmp/jv/audio/0.sock \
+        --audio-buffer-ms 120 \
+        --stream-timeout-ms 60 \
+        --audio-azimuth-scale 3 \
+        --audio-azimuth-max-deg 90 \
+        --tone-min-gap-ms 200 \
+        --source-mode tones \
+        >> /workspace/jv/logs/audio.log 2>&1 &
+
+    PID1=$!
+
+    python3 main.py \
+    -c config/nano.yaml \
+    -a output_to:socket \
+    >> /workspace/jv/logs/detect.log 2>&1 &
+
+    PID2=$!
+fi
 
 echo "Processes started:"
 echo "audio PID:   $PID1"
