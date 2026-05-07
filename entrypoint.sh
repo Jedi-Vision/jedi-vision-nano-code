@@ -3,7 +3,9 @@ set -Eeuo pipefail
 
 mkdir -p /workspace/jv/logs
 
-unset DISPLAY
+if [[ -z "${DISPLAY:-}" ]]; then
+    unset DISPLAY
+fi
 
 echo "Starting app..."
 
