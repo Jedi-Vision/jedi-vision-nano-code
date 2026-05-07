@@ -77,6 +77,7 @@ WORKDIR /workspace
 # Install jv + requirements
 # -----------------------------
 RUN git clone --recursive https://github.com/Jedi-Vision/jedi-vision-nano-code.git
+RUN git pull
 
 # Keep the spatial-audio toolchain late so edits there do not invalidate
 # the heavier xFormers/Triton layers above.
