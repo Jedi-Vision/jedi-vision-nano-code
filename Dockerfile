@@ -166,10 +166,12 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12-6/targets/aarch64-linux/
  
 # This is a temporary workaround required to install pva-allow-2 in docker which will not be necessary next release
 # RUN apt-get install -y pva-allow-2 || true && rm /var/lib/dpkg/info/pva-allow-2.post* && dpkg --configure pva-allow-2
- 
+
 # Install VPI
 RUN apt-get install -y libnvvpi3 vpi3-dev vpi3-samples
 RUN apt install python3.10-vpi3
+
+RUN git pull
 
 COPY entrypoint.sh /entrypoint.sh
 
