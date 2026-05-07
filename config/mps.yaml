@@ -2,14 +2,14 @@
 
 driver:
     device: mps  # cpu, mps, or cuda
-    output_to: none  # socket, file, or none
+    output_to: socket  # socket, file, or none
     serial_type: struct  # struct or protobuf
     object_model_name: yolo11
     det_whitelist: [0]  # refer to yolo_utils.py for label list
     vda_model_name: vits
     chkpts_folder: ./checkpoints
     retain_frames: 30
-    object_buffer_size: 0
+    object_buffer_size: 1
     frame_buffer_size: 1
     warmup_frames: 30
     camera_index: 0
@@ -19,11 +19,13 @@ driver:
     show_det: true
     depth: true
     metric: true  # enables absolute/metric depth
+    multi_object: false  # allows for multiple objects to be sent, if disabled sends closest
 
 object:
     tracker: bytetrack.yaml  # botsort.yaml or bytetrack.yaml
     conf: 0.25
     iou: 0.7
+    max_det: 10
     half: false  # half-precision inference
 
 mono:
@@ -31,8 +33,8 @@ mono:
 
 stereo:
     method: sgbm  # options: sgbm (default, more accurate, slower), bm (faster, simpler)
-    num_disparities: 128  # max disparity - min disparity, must be divisible by 16
-    block_size: 5  # matched block size, odd number >= 1, typically 3-11
+    num_disparities: 32  # max disparity - min disparity, must be divisible by 16
+    block_size: 3  # matched block size, odd number >= 1, typically 3-11
     min_disparity: 0  # min disparity value, adjust if rectification shifts images
     # P1: null  # smoothness penalty for ±1 disparity change; defaults to 8*1*block_size^2
     # P2: null  # smoothness penalty for >1 disparity change; defaults to 32*1*block_size^2, must be > P1
@@ -46,7 +48,7 @@ stereo:
     left_sensor_id: examples/videos/1/left.mp4  # if set to string then can open filepath
     right_sensor_id: examples/videos/1/right.mp4  # if set to string then can open filepath
     sample_method: gauss
-    wls_filter: false
+    wls_filter: true
     wls_lambda: 8000  # Regularization for WLS smoothness
     wls_sigma: 1.5  # Sensitivty of filter to edges (0.8 - 2.0)
 
@@ -54,6 +56,6 @@ gstreamer:
     sensor_mode: 4  # (1280x720, 59.9999 fps)
     capture_width: 1280
     capture_height: 720
-    display_width: 640
-    display_height: 360
+    display_width: 320
+    display_height: 180
     flip_method: 2

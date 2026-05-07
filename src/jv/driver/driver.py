@@ -16,7 +16,6 @@ import cv2
 import time
 import numpy as np
 import matplotlib.pyplot as plt
-from collections import defaultdict
 
 
 from jv.management import SystemManagement, log_block
@@ -48,6 +47,7 @@ class Driver:
         binocular: bool = True,
         depth: bool = True,
         metric: bool = False,
+        multi_object: bool = False,
         gstreamer_kwargs: dict = {},
         object_kwargs: dict = {},
         depth_kwargs: dict = {},
@@ -74,6 +74,8 @@ class Driver:
             show_det (bool, optional): Whether to display detection results. Defaults to False.
             depth (bool, optional): Whether to enable depth estimation. Defaults to True.
             metric (bool, optional): Whether to use metric depth estimation model. Defaults to False.
+            multi_object (bool, optional): Whether to allow detection of multiple objects. If disabled the closest
+                object will be sent.
 
         Kwargs:
             gstreamer_kwargs (dict, optional): GStreamer kwargs. See buffer.py for more information.
@@ -113,6 +115,7 @@ class Driver:
 
         self.depth = depth
         self.binocular = binocular
+        self.multi_object = multi_object
 
         # Binocular depth
         if self.binocular:
@@ -191,6 +194,14 @@ class Driver:
 
         self.device = device
         self.show_det = show_det
+
+        if self.show_det:  # check if display and if not set to false
+            try:
+                cv2.imshow("test", np.zeros((1, 1, 3), dtype=np.uint8))
+                cv2.destroyWindow("test")
+            except cv2.error:
+                self.show_det = False
+
         self.object_kwargs = object_kwargs
         self.depth_kwargs = depth_kwargs
 
@@ -274,6 +285,13 @@ class Driver:
                     )
 
             objects = list(map(two_to_three, objects))
+
+            # If not multi_object, ensure that only closest object is detected
+            if objects and not self.multi_object:
+                objects = [min(objects, key=lambda obj: (not np.isfinite(obj.depth), obj.depth))]
+                # Should only be one object, set id manually to 1
+                objects[0].id = 1
+                print(f"Object.x: {objects[0].x}, Object.y: {objects[0].y}, Object.depth: {objects[0].depth}")
 
             # Log depth statistics
             sys_mgmt.logMetric("depth.min", depth.min().item())  # TODO Review these metrics

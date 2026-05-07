@@ -19,11 +19,13 @@ driver:
     show_det: true
     depth: true
     metric: false  # enables absolute/metric depth
+    multi_object: false  # allows for multiple objects to be sent, if disabled sends closest
 
 object:
     tracker: bytetrack.yaml  # botsort.yaml or bytetrack.yaml
     conf: 0.25
     iou: 0.7
+    max_det: 10
     half: false  # half-precision inference
 
 mono:
