@@ -10,12 +10,14 @@ fi
 if [[ "${1:-}" == "visualize" ]]; then
     echo "Starting app in visualize mode..."
 
-    DISPLAY=:0 ./src/spatial-audio/build/jsa-visual-monitor \
+    export DISPLAY=:0
+
+    ./src/spatial-audio/build/jsa-visual-monitor \
         --ipc ipc:///tmp/jv/audio/0.sock \
         --forward-ipc ipc:///tmp/jv/audio/1.sock \
         >> /workspace/jv/logs/audio.log 2>&1 &
 
-    DISPLAY=:0 ./src/spatial-audio/build/jsa-live-3d \
+    ./src/spatial-audio/build/jsa-live-3d \
         --ipc ipc:///tmp/jv/audio/1.sock \
         --audio-buffer-ms 120 \
         --max-interp-window-ms 25 \
@@ -29,7 +31,7 @@ if [[ "${1:-}" == "visualize" ]]; then
 
     PID1=$!
 
-    DISPLAY=:0 python3 main.py \
+    python3 main.py \
     -c config/nano.yaml \
     -a output_to:socket \
     >> /workspace/jv/logs/detect.log 2>&1 &
