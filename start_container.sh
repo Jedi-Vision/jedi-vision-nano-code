@@ -12,6 +12,7 @@ DOCKER_ARGS=(
     -v /tmp/argus_socket:/tmp/argus_socket
     -v "$HOME/.Xauthority:/root/.Xauthority:rw"
     -v /dev:/dev
+    -v /var:/var
     -e "DISPLAY=${DISPLAY:-}"
     -e PULSE_SERVER=unix:/tmp/pulse/native
     -v /run/user/1000/pulse/native:/tmp/pulse/native
