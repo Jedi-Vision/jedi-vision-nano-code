@@ -20,6 +20,7 @@ driver:
     depth: true
     metric: false  # enables absolute/metric depth
     multi_object: false  # allows for multiple objects to be sent, if disabled sends closest
+    use_kalman: false  # enables Kalman filter for coordinate smoothing
 
 object:
     tracker: bytetrack.yaml  # botsort.yaml or bytetrack.yaml
@@ -51,6 +52,8 @@ stereo:
     wls_filter: true
     wls_lambda: 8000  # Regularization for WLS smoothness
     wls_sigma: 1.5  # Sensitivty of filter to edges (0.8 - 2.0)
+    med_filter: true  # median blur filter
+    ksize: 3  # must be odd number
 
 gstreamer:
     sensor_mode: 4  # (1280x720, 59.9999 fps)

@@ -25,7 +25,7 @@
 5. In the docker shell, pull the latest code changes
 
    ```bash
-   git pull
+   git stash; git pull --recurse-submodule
    ```
 
 6. Build the spatial audio (on the host, outside docker)
@@ -40,15 +40,15 @@
 7. Start the object detection with output to socket (Note: Keep running this command until it works, irratic behaviour of the code)
 
    ```bash
-   python3 main.py -c config/nano.yaml -a output_to:socket
+   python3 main.py -c config/nano.yaml -a output_to:socket &> /dev/null &
    ```
 
-8. Start the spatial audio visual monitor
+8. Start the spatial audio visual monitor (optional)
 
    ```bash
    ./src/spatial-audio/build/jsa-visual-monitor \
      --ipc ipc:///tmp/jv/audio/0.sock \
-     --forward-ipc ipc:///tmp/jv/audio/1.sock
+     --forward-ipc ipc:///tmp/jv/audio/1.sock &> /dev/null &
    ```
 
 9. Start the spatial audio
@@ -62,7 +62,7 @@
     --audio-azimuth-scale 2.75 \
     --audio-azimuth-max-deg 90 \
     --tone-min-gap-ms 200 \
-    --source-mode tones
+    --source-mode tones &> /dev/null &
    ```
 
    ```bash
@@ -70,8 +70,7 @@
     --ipc ipc:///tmp/jv/audio/1.sock \
     --audio-buffer-ms 120 \
     --max-interp-window-ms 25 \
-
     --audio-azimuth-scale 2.75 \
     --audio-azimuth-max-deg 90 \
-    --source-mode songs
+    --source-mode songs &> /dev/null &
    ```

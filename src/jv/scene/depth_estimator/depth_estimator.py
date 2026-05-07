@@ -53,6 +53,8 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
         wls_filter: bool = False,
         wls_lambda: float = 8000.,
         wls_sigma: float = 1.5,
+        med_filter: bool = False,
+        ksize: int = 3,
     ):
         super().__init__(max_depth)
         assert num_disparities > 0 and num_disparities % 16 == 0, \
@@ -74,6 +76,9 @@ class BMStereoDepthEstimator(StereoDepthEstimatorBase):
             self.right_match = cv2.ximgproc.createRightMatcher(self.stereo)
         self.wls_lambda = wls_lambda
         self.wls_sigma = wls_sigma
+
+        self.med_filter = med_filter
+        self.ksize = ksize
 
     def calc_disparity(self, left_img: np.ndarray, right_img: np.ndarray) -> np.ndarray:
         """
@@ -151,6 +156,8 @@ class SGBMStereoDepthEstimator(BMStereoDepthEstimator):
         wls_filter: bool = False,
         wls_lambda: float = 8000.,
         wls_sigma: float = 1.5,
+        med_filter: bool = False,
+        ksize: int = 3,
     ):
         self.max_depth = max_depth
         assert num_disparities > 0 and num_disparities % 16 == 0, \
@@ -183,3 +190,6 @@ class SGBMStereoDepthEstimator(BMStereoDepthEstimator):
             self.right_match = cv2.ximgproc.createRightMatcher(self.stereo)
         self.wls_lambda = wls_lambda
         self.wls_sigma = wls_sigma
+        
+        self.med_filter = med_filter
+        self.ksize = ksize
