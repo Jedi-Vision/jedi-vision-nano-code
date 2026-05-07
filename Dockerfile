@@ -77,7 +77,6 @@ WORKDIR /workspace
 # Install jv + requirements
 # -----------------------------
 RUN git clone --recursive https://github.com/Jedi-Vision/jedi-vision-nano-code.git
-RUN git pull
 
 # Keep the spatial-audio toolchain late so edits there do not invalidate
 # the heavier xFormers/Triton layers above.
@@ -103,6 +102,7 @@ RUN cmake --preset vcpkg
 RUN cmake --build build -j
 
 WORKDIR /workspace/jedi-vision-nano-code
+RUN git checkout main && pull
 RUN pip install .
 RUN sed -i '/torch/d' requirements.txt && \
     sed -i '/torchvision/d' requirements.txt && \
