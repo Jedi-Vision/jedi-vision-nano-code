@@ -102,7 +102,7 @@ RUN cmake --preset vcpkg
 RUN cmake --build build -j
 
 WORKDIR /workspace/jedi-vision-nano-code
-RUN git checkout main && pull
+RUN git checkout main && git pull
 RUN pip install .
 RUN sed -i '/torch/d' requirements.txt && \
     sed -i '/torchvision/d' requirements.txt && \
