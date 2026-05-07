@@ -291,6 +291,7 @@ class Driver:
                 objects = [min(objects, key=lambda obj: (not np.isfinite(obj.depth), obj.depth))]
                 # Should only be one object, set id manually to 1
                 objects[0].id = 1
+                print(f"Object.x: {objects[0].x}, Object.y: {objects[0].y}, Object.depth: {objects[0].depth}")
 
             # Log depth statistics
             sys_mgmt.logMetric("depth.min", depth.min().item())  # TODO Review these metrics
