@@ -20,7 +20,7 @@ driver:
     depth: true
     metric: false  # enables absolute/metric depth
     multi_object: false  # allows for multiple objects to be sent, if disabled sends closest
-    use_kalman: true  # enables Kalman filter for coordinate smoothing
+    use_kalman: false  # enables Kalman filter for coordinate smoothing
 
 object:
     tracker: bytetrack.yaml  # botsort.yaml or bytetrack.yaml
