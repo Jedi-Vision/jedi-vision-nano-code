@@ -95,6 +95,7 @@ RUN git clone --depth 1 https://github.com/microsoft/vcpkg.git "${VCPKG_ROOT}" &
     "${VCPKG_ROOT}/bootstrap-vcpkg.sh" && \
     "${VCPKG_ROOT}/vcpkg" version
 
+RUN echo 'FUCK'
 WORKDIR /workspace/jedi-vision-nano-code/src/spatial-audio
 # Validate the spatial-audio toolchain without paying for a full build here.
 RUN git checkout main && git pull
