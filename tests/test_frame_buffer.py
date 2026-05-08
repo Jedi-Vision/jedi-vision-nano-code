@@ -22,7 +22,7 @@ import time
 from jv.camera import FrameBuffer
 
 
-def test_monocular(camera_index, frame_rate, frame_skip, buffer_size, warmup):
+def test_monocular(camera_index, frame_rate, frame_skip, buffer_size, warmup, use_gstreamer):
     """Test monocular camera capture and display."""
     print("=== Monocular FrameBuffer Test ===")
     print(f"  Camera index : {camera_index}")
@@ -39,6 +39,7 @@ def test_monocular(camera_index, frame_rate, frame_skip, buffer_size, warmup):
         frame_skip=frame_skip,
         frame_rate=frame_rate,
         binocular=False,
+        use_gstreamer_monocular=use_gstreamer
     )
 
     fb.start()
@@ -156,6 +157,8 @@ def main():
                         help="Max frames in the queue (default: 10)")
     parser.add_argument("--warmup", type=int, default=0,
                         help="Number of warmup frames before buffering (default: 10)")
+    parser.add_argument("--use-gstreamer", type=bool, default=True,
+                        help="Number of warmup frames before buffering (default: 10)")
 
     # GStreamer options (binocular only)
     parser.add_argument("--capture-width", type=int, default=1280,
@@ -180,6 +183,7 @@ def main():
             frame_skip=args.frame_skip,
             buffer_size=args.buffer_size,
             warmup=args.warmup,
+            use_gstreamer=args.use_gstreamer,
         )
     else:
         gstreamer_kwargs = {
