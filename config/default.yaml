@@ -14,7 +14,7 @@ driver:
     warmup_frames: 30
     camera_index: 0
     binocular: false
-    use_gstreamer_monocular: true
+    use_gstreamer_monocular: false
     frame_skip: 0
     frame_rate: 30
     show_det: true
