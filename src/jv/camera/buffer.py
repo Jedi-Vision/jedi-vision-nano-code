@@ -193,6 +193,13 @@ class FrameBuffer:
             if self.q.full():
                 self.q.get(timeout=0.001)  # Remove the oldest frame to make space
 
+            if frame is not None:
+                frame = cv2.resize(
+                    frame,
+                    (self.gstreamer_kwargs.get("display_width", 1280),
+                        self.gstreamer_kwargs.get("display_height", 720))
+                )
+
             # Add frame to the queue
             self.q.put(((frame,), frame_count, timestamp_ms), timeout=0.001)
 
