@@ -13,7 +13,8 @@ driver:
     frame_buffer_size: 1
     warmup_frames: 30
     camera_index: 0
-    binocular: true  # allows for two camera's to be used, also uses GStreamer pipeline
+    binocular: false  # allows for two camera's to be used, also uses GStreamer pipeline
+    use_gstreamer_monocular: true
     frame_skip: 0
     frame_rate: 30
     show_det: true

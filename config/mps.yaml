@@ -13,7 +13,8 @@ driver:
     frame_buffer_size: 1
     warmup_frames: 30
     camera_index: 0
-    binocular: true
+    binocular: 
+    use_gstreamer_monocular: true
     frame_skip: 0
     frame_rate: 30
     show_det: true
@@ -46,8 +47,8 @@ stereo:
     speckle_range: 2  # max disparity variation in connected component, implicitly *16, typically 1-2
     max_depth: 10000.0  # max depth (mm), points beyond are zeroed
     calibration_data: camera_calibration.yaml
-    left_sensor_id: examples/videos/1/left.mp4  # if set to string then can open filepath
-    right_sensor_id: examples/videos/1/right.mp4  # if set to string then can open filepath
+    left_sensor_id: examples/videos/3/left.mp4  # if set to string then can open filepath
+    right_sensor_id: examples/videos/3/right.mp4  # if set to string then can open filepath
     sample_method: gauss
     wls_filter: true
     wls_lambda: 8000  # Regularization for WLS smoothness

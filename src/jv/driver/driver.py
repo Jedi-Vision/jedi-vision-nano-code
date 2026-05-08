@@ -45,6 +45,7 @@ class Driver:
         frame_rate: int = 30,
         show_det: bool = False,
         binocular: bool = True,
+        use_gstreamer_monocular: bool = True,
         depth: bool = True,
         metric: bool = False,
         multi_object: bool = False,
@@ -99,6 +100,7 @@ class Driver:
             frame_skip=frame_skip,
             frame_rate=frame_rate,
             binocular=binocular,
+            use_gstreamer_monocular=use_gstreamer_monocular,
             gstreamer_kwargs=gstreamer_kwargs
         )
 

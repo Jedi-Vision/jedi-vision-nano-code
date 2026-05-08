@@ -17,6 +17,7 @@ class FrameBuffer:
         frame_skip: int = 2,
         frame_rate: int = 30,
         binocular: bool = False,
+        use_gstreamer_monocular: bool = False,
         gstreamer_kwargs: dict = {}
     ):
         """
@@ -63,6 +64,7 @@ class FrameBuffer:
         self.running = False
         self.thread = None
         self.binocular = binocular
+        self.use_gstreamer_monocular = use_gstreamer_monocular
         self.gstreamer_kwargs = gstreamer_kwargs
         self.left_sensor_id = left_sensor_id
         self.right_sensor_id = right_sensor_id
@@ -100,7 +102,17 @@ class FrameBuffer:
             self.thread = threading.Thread(target=self._capture_frames_binocular, daemon=True)
             self.thread.start()
         else:
-            self.capture = cv2.VideoCapture(self.camera_index)
+            if self.use_gstreamer_monocular:
+                self.capture = cv2.VideoCapture(
+                    gstreamer_pipeline(
+                        sensor_id=int(self.camera_index),
+                        framerate=self.frame_rate,
+                        **self.gstreamer_kwargs
+                    ),
+                    cv2.CAP_GSTREAMER
+                )
+            else:
+                self.capture = cv2.VideoCapture(self.camera_index)
             if not self.capture.isOpened():
                 raise RuntimeError("Failed to open camera.")
             self.running = True
