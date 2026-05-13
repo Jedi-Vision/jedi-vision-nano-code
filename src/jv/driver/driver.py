@@ -45,7 +45,7 @@ class Driver:
         frame_rate: int = 30,
         show_det: bool = False,
         binocular: bool = True,
-        use_gstreamer_monocular: bool = True,
+        use_gstreamer: bool = True,
         depth: bool = True,
         metric: bool = False,
         multi_object: bool = False,
@@ -95,12 +95,12 @@ class Driver:
             size=frame_buffer_size,
             camera_index=camera_index,
             left_sensor_id=depth_kwargs.get("left_sensor_id", 0),
-            right_sensor_id=depth_kwargs.get("right_sensor_id", 1),
+            right_sensor_id=depth_kwargs.get("right_sensor_id", None),
             warmup_frames=warmup_frames,
             frame_skip=frame_skip,
             frame_rate=frame_rate,
             binocular=binocular,
-            use_gstreamer_monocular=use_gstreamer_monocular,
+            use_gstreamer=use_gstreamer,
             gstreamer_kwargs=gstreamer_kwargs
         )
 

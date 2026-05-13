@@ -12,12 +12,12 @@ class FrameBuffer:
         size: int = 0,
         camera_index: int | str = 0,
         left_sensor_id: int | str = 0,
-        right_sensor_id: int | str = 1,
+        right_sensor_id: int | str | None = 1,
         warmup_frames: int = 30,
         frame_skip: int = 2,
         frame_rate: int = 30,
         binocular: bool = False,
-        use_gstreamer_monocular: bool = False,
+        use_gstreamer: bool = False,
         gstreamer_kwargs: dict = {}
     ):
         """
@@ -64,45 +64,67 @@ class FrameBuffer:
         self.running = False
         self.thread = None
         self.binocular = binocular
-        self.use_gstreamer_monocular = use_gstreamer_monocular
+        self.use_gstreamer = use_gstreamer
         self.gstreamer_kwargs = gstreamer_kwargs
         self.left_sensor_id = left_sensor_id
         self.right_sensor_id = right_sensor_id
         self.sim_bino = False
+        self.split_bino = False
 
     def start(self):
         """Starts the frame capturing thread(s)."""
         if self.binocular:
-            if isinstance(self.left_sensor_id, str) or isinstance(self.right_sensor_id, str):
-                self.capture_left = cv2.VideoCapture(self.left_sensor_id)
-                self.capture_right = cv2.VideoCapture(self.right_sensor_id)
-                self.sim_bino = True
+            if self.right_sensor_id is None:
+                self.split_bino = True
+                if self.use_gstreamer and not isinstance(self.left_sensor_id, str):
+                    self.capture_left = cv2.VideoCapture(
+                        gstreamer_pipeline(
+                            sensor_id=self.left_sensor_id,
+                            framerate=self.frame_rate,
+                            **self.gstreamer_kwargs
+                        ),
+                        cv2.CAP_GSTREAMER
+                    )
+                else:
+                    self.capture_left = cv2.VideoCapture(self.left_sensor_id)
             else:
-                self.capture_left = cv2.VideoCapture(
-                    gstreamer_pipeline(
-                        sensor_id=self.left_sensor_id,
-                        framerate=self.frame_rate,
-                        **self.gstreamer_kwargs
-                    ),
-                    cv2.CAP_GSTREAMER
-                )
-                self.capture_right = cv2.VideoCapture(
-                    gstreamer_pipeline(
-                        sensor_id=self.right_sensor_id,
-                        framerate=self.frame_rate,
-                        **self.gstreamer_kwargs
-                    ),
-                    cv2.CAP_GSTREAMER
-                )
+                if isinstance(self.left_sensor_id, str) or isinstance(self.right_sensor_id, str):
+                    self.capture_left = cv2.VideoCapture(self.left_sensor_id)
+                    self.capture_right = cv2.VideoCapture(self.right_sensor_id)
+                    self.sim_bino = True
+                else:
+                    if self.use_gstreamer:
+                        self.capture_left = cv2.VideoCapture(
+                            gstreamer_pipeline(
+                                sensor_id=self.left_sensor_id,
+                                framerate=self.frame_rate,
+                                **self.gstreamer_kwargs
+                            ),
+                            cv2.CAP_GSTREAMER
+                        )
+                        self.capture_right = cv2.VideoCapture(
+                            gstreamer_pipeline(
+                                sensor_id=self.right_sensor_id,
+                                framerate=self.frame_rate,
+                                **self.gstreamer_kwargs
+                            ),
+                            cv2.CAP_GSTREAMER
+                        )
+                    else:
+                        self.capture_left = cv2.VideoCapture(self.left_sensor_id)
+                        self.capture_right = cv2.VideoCapture(self.right_sensor_id)
 
-            if not self.capture_left.isOpened() or not self.capture_right.isOpened():
+            if self.split_bino:
+                if not self.capture_left.isOpened():
+                    raise RuntimeError("Failed to open camera.")
+            elif not self.capture_left.isOpened() or not self.capture_right.isOpened():
                 raise RuntimeError("Failed to open one or both cameras.")
 
             self.running = True
             self.thread = threading.Thread(target=self._capture_frames_binocular, daemon=True)
             self.thread.start()
         else:
-            if self.use_gstreamer_monocular:
+            if self.use_gstreamer:
                 self.capture = cv2.VideoCapture(
                     gstreamer_pipeline(
                         sensor_id=int(self.camera_index),
@@ -141,7 +163,10 @@ class FrameBuffer:
 
         while self.running:
             ret_left, frame_left = self.capture_left.read()
-            ret_right, frame_right = self.capture_right.read()
+            if self.split_bino:
+                ret_right, frame_right = ret_left, None
+            else:
+                ret_right, frame_right = self.capture_right.read()
             frame_count += 1
             timestamp_ms = time.time() * 1000
 
@@ -156,24 +181,25 @@ class FrameBuffer:
             if not ret_left or not ret_right:
                 break
 
+            if self.split_bino and frame_left is not None:
+                mid = frame_left.shape[1] // 2
+                frame_right = frame_left[:, mid:]
+                frame_left = frame_left[:, :mid]
+
             if self.q.full():
                 self.q.get(timeout=0.001)  # Remove the oldest frame to make space
 
             # If using simulated binocular camera pipeline, there is no downscaling
-            # according to the arguments like in GStreamer, so we need to 
+            # according to the arguments like in GStreamer, so we need to
             # manually downscale the image before adding to queue.
             if self.sim_bino:
-                if frame_left is not None:
-                    frame_left = cv2.resize(
-                        frame_left,
-                        (self.gstreamer_kwargs.get("display_width", 1280),
-                         self.gstreamer_kwargs.get("display_height", 720))
-                    )
-                if frame_right is not None:
-                    frame_right = cv2.resize(
-                        frame_right,
-                        (self.gstreamer_kwargs.get("display_width", 1280),
-                         self.gstreamer_kwargs.get("display_height", 720))
+                if frame_left is not None and frame_right is not None:
+                    [frame_left, frame_right] = map(
+                        lambda f: cv2.resize(
+                            f,
+                            dsize=(self.gstreamer_kwargs.get("display_width", 1280),
+                                   self.gstreamer_kwargs.get("display_height", 720))),
+                        [frame_left, frame_right]
                     )
 
             # Add both frames to the queue
@@ -229,8 +255,7 @@ class FrameBuffer:
             frame = self.q.get(timeout=0.001)
             self.q.task_done()
             return frame
-        except Empty as e:
-            # logging.warning(f"Frame buffer empty: {e}")
+        except Empty:
             return None
 
 
