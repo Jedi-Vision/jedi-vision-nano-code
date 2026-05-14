@@ -8,16 +8,18 @@ class Rectifier:
         self,
         calibration_data,
         img_size,
-        cap_size
+        cap_size,
+        split_bino: bool = False
     ):
 
         self._init_rectify(
             *calibration_data,
             img_size=img_size,
-            cap_size=cap_size
+            cap_size=cap_size,
+            split_bino=split_bino
         )
 
-    def _init_rectify(self, mtx1, dist1, mtx2, dist2, R, T, img_size, cap_size):
+    def _init_rectify(self, mtx1, dist1, mtx2, dist2, R, T, img_size, cap_size, split_bino: bool = False):
         """
         Initializes stereo rectification for a pair of cameras.
 
@@ -67,6 +69,9 @@ class Rectifier:
             scale = scale_width
 
             [mtx1, mtx2] = map(lambda x: scale_camera_matrix(x, scale), [mtx1, mtx2])
+
+        if split_bino:
+            img_size = (img_size[0] // 2, img_size[1])
 
         # Compute rectification transforms for stereo cameras
         R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(

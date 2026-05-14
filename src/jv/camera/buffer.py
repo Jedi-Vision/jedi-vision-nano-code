@@ -181,6 +181,17 @@ class FrameBuffer:
             if not ret_left or not ret_right:
                 break
 
+            if (self.sim_bino or not self.use_gstreamer) and self.split_bino:  # if split bino, need to resize pre-split image
+                [frame_left] = map(
+                    lambda f: cv2.resize(
+                        f,
+                        dsize=(self.gstreamer_kwargs.get("display_width", 1280),
+                               self.gstreamer_kwargs.get("display_height", 720)),
+                        interpolation=cv2.INTER_AREA
+                    ),
+                    [frame_left]
+                )
+
             if self.split_bino and frame_left is not None:
                 mid = frame_left.shape[1] // 2
                 frame_right = frame_left[:, mid:]
@@ -192,13 +203,15 @@ class FrameBuffer:
             # If using simulated binocular camera pipeline, there is no downscaling
             # according to the arguments like in GStreamer, so we need to
             # manually downscale the image before adding to queue.
-            if self.sim_bino:
+            if (self.sim_bino or not self.use_gstreamer) and not self.split_bino:
                 if frame_left is not None and frame_right is not None:
                     [frame_left, frame_right] = map(
                         lambda f: cv2.resize(
                             f,
                             dsize=(self.gstreamer_kwargs.get("display_width", 1280),
-                                   self.gstreamer_kwargs.get("display_height", 720))),
+                                   self.gstreamer_kwargs.get("display_height", 720)),
+                            interpolation=cv2.INTER_AREA
+                        ),
                         [frame_left, frame_right]
                     )
 

@@ -103,6 +103,10 @@ class Driver:
             use_gstreamer=use_gstreamer,
             gstreamer_kwargs=gstreamer_kwargs
         )
+        if depth_kwargs.get("right_sensor_id", None) is None:
+            self.split_bino = True
+        else:
+            self.split_bino = False
 
         self.env_model = YoloObjectRepresentationModel(
             model_name=object_model_name,
@@ -186,6 +190,7 @@ class Driver:
                 calibration_data=load_calibration_data(depth_kwargs.get("calibration_data", "camera_calibration.yaml")),
                 img_size=(gstreamer_kwargs['display_width'], gstreamer_kwargs['display_height']),
                 cap_size=(gstreamer_kwargs['capture_width'], gstreamer_kwargs['capture_height']),
+                split_bino=self.split_bino
             )
         else:
             self.scene_model = VideoDepthAnything(**MODEL_CONFIGS[vda_model_name])
@@ -231,6 +236,7 @@ class Driver:
         # is done on rectified image pairs, so that we can then map the depth calculated
         # for rectified images to the corresponding objects given the rectified (x,y)
         # coordinates
+
         if self.binocular:
             frame = self.rectifier.rectify(frame)
 
