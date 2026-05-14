@@ -68,7 +68,6 @@ class FrameBuffer:
         self.gstreamer_kwargs = gstreamer_kwargs
         self.left_sensor_id = left_sensor_id
         self.right_sensor_id = right_sensor_id
-        self.sim_bino = False
         self.split_bino = False
 
     def start(self):
@@ -91,7 +90,7 @@ class FrameBuffer:
                 if isinstance(self.left_sensor_id, str) or isinstance(self.right_sensor_id, str):
                     self.capture_left = cv2.VideoCapture(self.left_sensor_id)
                     self.capture_right = cv2.VideoCapture(self.right_sensor_id)
-                    self.sim_bino = True
+                    self.use_gstreamer = False
                 else:
                     if self.use_gstreamer:
                         self.capture_left = cv2.VideoCapture(
@@ -181,17 +180,6 @@ class FrameBuffer:
             if not ret_left or not ret_right:
                 break
 
-            if (self.sim_bino or not self.use_gstreamer) and self.split_bino:  # if split bino, need to resize pre-split image
-                [frame_left] = map(
-                    lambda f: cv2.resize(
-                        f,
-                        dsize=(self.gstreamer_kwargs.get("display_width", 1280),
-                               self.gstreamer_kwargs.get("display_height", 720)),
-                        interpolation=cv2.INTER_AREA
-                    ),
-                    [frame_left]
-                )
-
             if self.split_bino and frame_left is not None:
                 mid = frame_left.shape[1] // 2
                 frame_right = frame_left[:, mid:]
@@ -200,16 +188,18 @@ class FrameBuffer:
             if self.q.full():
                 self.q.get(timeout=0.001)  # Remove the oldest frame to make space
 
-            # If using simulated binocular camera pipeline, there is no downscaling
-            # according to the arguments like in GStreamer, so we need to
+            # If not using GStreamer, there is no downscaling, so we need to
             # manually downscale the image before adding to queue.
-            if (self.sim_bino or not self.use_gstreamer) and not self.split_bino:
+            # if split bino, we need to halve the display_width for scaling
+            if not self.use_gstreamer:
                 if frame_left is not None and frame_right is not None:
                     [frame_left, frame_right] = map(
                         lambda f: cv2.resize(
                             f,
-                            dsize=(self.gstreamer_kwargs.get("display_width", 1280),
-                                   self.gstreamer_kwargs.get("display_height", 720)),
+                            dsize=(
+                                self.gstreamer_kwargs.get("display_width", 1280) // 2 if self.split_bino
+                                else self.gstreamer_kwargs.get("display_width", 1280),
+                                self.gstreamer_kwargs.get("display_height", 720)),
                             interpolation=cv2.INTER_AREA
                         ),
                         [frame_left, frame_right]
@@ -244,7 +234,7 @@ class FrameBuffer:
             if self.q.full():
                 self.q.get(timeout=0.001)  # Remove the oldest frame to make space
 
-            if frame is not None:
+            if frame is not None and not self.use_gstreamer:
                 frame = cv2.resize(
                     frame,
                     (self.gstreamer_kwargs.get("display_width", 1280),

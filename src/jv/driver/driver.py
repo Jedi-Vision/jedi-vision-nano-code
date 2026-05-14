@@ -186,10 +186,15 @@ class Driver:
                         speckle_range=depth_kwargs.get('speckle_range', 32),
                         max_depth=depth_kwargs.get('max_depth', 10000),
                     )
+
+            # Handle binocular split logic for ensuring that capture/display width is divided by two
+            # for the individual frames
             self.rectifier = Rectifier(
                 calibration_data=load_calibration_data(depth_kwargs.get("calibration_data", "camera_calibration.yaml")),
-                img_size=(gstreamer_kwargs['display_width'], gstreamer_kwargs['display_height']),
-                cap_size=(gstreamer_kwargs['capture_width'], gstreamer_kwargs['capture_height']),
+                img_size=(gstreamer_kwargs['display_width'] // 2 if self.split_bino is False
+                          else gstreamer_kwargs['display_width'], gstreamer_kwargs['display_height']),
+                cap_size=(gstreamer_kwargs['capture_width'] // 2 if self.split_bino is False
+                          else gstreamer_kwargs['capture_width'], gstreamer_kwargs['capture_height']),
                 split_bino=self.split_bino
             )
         else:

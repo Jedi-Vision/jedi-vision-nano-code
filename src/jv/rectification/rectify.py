@@ -70,11 +70,6 @@ class Rectifier:
 
             [mtx1, mtx2] = map(lambda x: scale_camera_matrix(x, scale), [mtx1, mtx2])
 
-        # If binocular image is single and needs to be split, the passed in img_size from
-        # the camera is 2x the width of the actual left and right images, thus resize
-        if split_bino:
-            img_size = (img_size[0] // 2, img_size[1])
-
         # Compute rectification transforms for stereo cameras
         R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(
             mtx1, dist1, mtx2, dist2, img_size,
