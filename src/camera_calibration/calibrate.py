@@ -19,6 +19,8 @@ from jv.camera import FrameBuffer
 
 def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,chessboard_grid_size=(9,6),number_of_frames=50):
 
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
 
     # Define the dimensions of checkerboard
     CHECKERBOARD = chessboard_grid_size
@@ -80,7 +82,10 @@ def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,che
             print('capture terminated, ABORTING')
             return
     cv2.destroyAllWindows()
-    
+
+    np.save(f"{timestamp}_img_list_c1.npy", img_list_c1)
+    np.save(f"{timestamp}_img_list_c2.npy", img_list_c2)
+
     for image1, image2 in zip(img_list_c1, img_list_c2):
         grayColor1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
         grayColor2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
@@ -148,7 +153,6 @@ def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,che
         threedpoints, twodpoints_c2,(width, height), None, None)
 
     # Save single camera parameters using cv2.FileStorage
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     fs_c1 = cv2.FileStorage(camera_name + "_c1_" + timestamp + ".yml", cv2.FILE_STORAGE_WRITE)
     fs_c1.write("k", k1)
