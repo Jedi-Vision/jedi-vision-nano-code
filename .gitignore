@@ -221,3 +221,5 @@ examples/stereo/*
 !examples/stereo/Playtable-perfect
 
 examples/videos/
+
+src/camera_calibration/capture-*

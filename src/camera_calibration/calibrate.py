@@ -17,7 +17,15 @@ from datetime import datetime
 from jv.camera import FrameBuffer
 
 
-def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,chessboard_grid_size=(9,6),number_of_frames=50):
+def stereoCalibrateCamera(
+    fb: FrameBuffer | None,
+    camera_name,
+    chessboard_box_size=1,
+    chessboard_grid_size=(9,6),
+    number_of_frames=50,
+    img_list_c1=None,
+    img_list_c2=None,
+):
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
@@ -54,34 +62,42 @@ def stereoCalibrateCamera(fb: FrameBuffer, camera_name,chessboard_box_size=1,che
     objectp3d *=square_size
     
 
-    img_list_c1 =[] 
-    img_list_c2 =[] 
+    if img_list_c1 is None or img_list_c2 is None:
+        img_list_c1 =[] 
+        img_list_c2 =[] 
 
-    fb.start()
+        fb.start()
 
-    print("Align camera properly.. and \n press 'c' to capture\npress 'x' to abort operation")
-    img_count=0
-    while img_count<number_of_frames:
-        result = fb.get()
-        if result is None:
-            continue
-        (img1, img2), _, _ = result
-        #cv2.imshow('img_c1',img1)
-        #cv2.imshow('img_c2',img2)
-        img1_r= cv2.resize(img1, (0,0), fx=0.6, fy=0.6)
-        img2_r=cv2.resize(img2, (0,0), fx=0.6, fy=0.6)
-        cv2.imshow("camera left - camera right",cv2.hconcat([img1_r ,img2_r]))
-        k = cv2.waitKey(10) & 0xFF
-        if k == ord('c'):
-            img_list_c1.append(img1)
-            img_list_c2.append(img2)
-            img_count +=1
-            print(str(img_count)+" image captured")
-        elif k == ord('x'):
-            cv2.destroyAllWindows()
-            print('capture terminated, ABORTING')
-            return
-    cv2.destroyAllWindows()
+        print("Align camera properly.. and \n press 'c' to capture\npress 'x' to abort operation")
+        img_count=0
+        while img_count<number_of_frames:
+            result = fb.get()
+            if result is None:
+                continue
+            (img1, img2), _, _ = result
+            #cv2.imshow('img_c1',img1)
+            #cv2.imshow('img_c2',img2)
+            img1_r= cv2.resize(img1, (0,0), fx=0.6, fy=0.6)
+            img2_r=cv2.resize(img2, (0,0), fx=0.6, fy=0.6)
+            cv2.imshow("camera left - camera right",cv2.hconcat([img1_r ,img2_r]))
+            k = cv2.waitKey(10) & 0xFF
+            if k == ord('c'):
+                img_list_c1.append(img1)
+                img_list_c2.append(img2)
+                img_count +=1
+                print(str(img_count)+" image captured")
+            elif k == ord('x'):
+                cv2.destroyAllWindows()
+                print('capture terminated, ABORTING')
+                return
+        cv2.destroyAllWindows()
+    else:
+        img_list_c1 = list(img_list_c1)
+        img_list_c2 = list(img_list_c2)
+        if len(img_list_c1) != len(img_list_c2):
+            raise ValueError("left and right image lists must contain the same number of images")
+        if len(img_list_c1) == 0:
+            raise ValueError("image lists are empty")
 
     np.save(f"{timestamp}_img_list_c1.npy", img_list_c1)
     np.save(f"{timestamp}_img_list_c2.npy", img_list_c2)
