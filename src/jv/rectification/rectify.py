@@ -9,17 +9,15 @@ class Rectifier:
         calibration_data,
         img_size,
         cap_size,
-        split_bino: bool = False
     ):
 
         self._init_rectify(
             *calibration_data,
             img_size=img_size,
             cap_size=cap_size,
-            split_bino=split_bino
         )
 
-    def _init_rectify(self, mtx1, dist1, mtx2, dist2, R, T, img_size, cap_size, split_bino: bool = False):
+    def _init_rectify(self, mtx1, dist1, mtx2, dist2, R, T, img_size, cap_size):
         """
         Initializes stereo rectification for a pair of cameras.
 
