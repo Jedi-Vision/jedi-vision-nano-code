@@ -32,6 +32,7 @@ class Driver:
         device: Literal["cpu", "mps", "cuda"],
         output_to: Literal["socket", "file", "none"] = "socket",
         serial_type: Literal["struct", "protobuf"] = "struct",
+        output_file: str | None = None,
         object_model_name: str = "yolo11",
         det_whitelist: set = {0},
         vda_model_name: str = "vits",
@@ -60,6 +61,8 @@ class Driver:
         Args:
             device (Literal["cpu", "mps", "cuda"]): Device to run models on.
             output_to (Literal["socket", "file", "none"]): Output destination for object buffer.
+            output_file (str | None, optional): If set, writes a disparity video with
+                detection boxes when binocular depth is enabled.
             object_model_name (str, optional): Name of the object detection model. Defaults to "yolo11".
             det_whitelist (set, optional): Object detection label whitelist.
             vda_model_name (str, optional): Name of the video depth estimation model. Defaults to "vits".
@@ -124,6 +127,12 @@ class Driver:
         self.binocular = binocular
         self.multi_object = multi_object
         self.use_kalman = use_kalman
+        self.output_file = output_file
+        self.output_writer = None
+        self.output_fps = frame_rate / frame_skip if frame_skip > 0 else frame_rate
+        if self.output_file and not (self.binocular and self.depth):
+            print("Output file is only supported for binocular depth; disabling output.")
+            self.output_file = None
 
         # Binocular depth
         if self.binocular:
@@ -250,6 +259,7 @@ class Driver:
             det_whitelist=self.det_whitelist,
             **self.object_kwargs
         )
+        objects_2d = list(objects)
 
         # Log object detection results
         sys_mgmt.logMetric("objects.detected_count", len(objects))
@@ -339,6 +349,36 @@ class Driver:
                     color_depth = colormap[color_depth]
                     cv2.imshow("msg.mask", color_depth)
                     cv2.waitKey(1)
+
+            if self.output_file and self.binocular:
+                disp_color = color_disparity  # type: ignore
+
+                for obj in objects_2d:
+                    x1, y1 = int(obj.x1), int(obj.y1)
+                    x2, y2 = int(obj.x2), int(obj.y2)
+                    conf = getattr(obj, "conf", 1.0)
+                    cv2.rectangle(disp_color, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    label = f"{obj.label} {conf:.2f}"
+                    cv2.putText(
+                        disp_color,
+                        label,
+                        (x1, max(y1 - 10, 0)),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (0, 255, 0),
+                        1,
+                    )
+
+                if self.output_writer is None:
+                    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore
+                    self.output_writer = cv2.VideoWriter(
+                        self.output_file,
+                        fourcc,
+                        self.output_fps,
+                        (disp_color.shape[1], disp_color.shape[0])
+                    )
+
+                self.output_writer.write(disp_color)
         else:
             # Convert Object2DCoordData to ObjectCoordData with dummy depth if needed
             objects = [
@@ -403,6 +443,8 @@ class Driver:
                 self.frame_buffer.stop()
                 print("Terminating object buffer...")
                 self.object_buffer.stop()
+                if self.output_writer is not None:
+                    self.output_writer.release()
 
                 exit(0)
 

@@ -31,6 +31,7 @@ class Object2DCoordData:
     y1: float
     x2: float
     y2: float
+    conf: float
 
 
 @dataclass
@@ -46,9 +47,10 @@ class ObjectRepData:
             "objects": [
                 {
                     "id": obj.id,
+                    "label": obj.label,
                     "x": obj.x,
                     "y": obj.y,
-                    "depth": obj.depth,
+                    "depth": obj.depth
                 }
                 for obj in self.objects
             ],

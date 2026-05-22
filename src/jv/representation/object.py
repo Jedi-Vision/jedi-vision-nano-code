@@ -325,6 +325,7 @@ class YoloObjectRepresentationModel(AbstractModelClass):
                 if len(track) > self.retain_frames:  # retain track for only 30 frames
                     track.pop(0)
 
+                conf = out.boxes.conf[objects.__len__()].item() if hasattr(out.boxes, 'conf') and out.boxes.conf is not None else 0.0
                 objects.append(
                     Object2DCoordData(
                         id=object_id,
@@ -333,6 +334,7 @@ class YoloObjectRepresentationModel(AbstractModelClass):
                         y1=y1.item(),
                         x2=x2.item(),
                         y2=y2.item(),
+                        conf=conf
                     )
                 )
 

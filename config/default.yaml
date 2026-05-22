@@ -4,6 +4,7 @@ driver:
     device: cpu  # cpu, mps, or cuda
     output_to: none  # socket, file, or none
     serial_type: struct  # struct or protobuf
+    output_file: null  # writes disparity video with boxes when binocular depth is enabled
     object_model_name: yolo11
     det_whitelist: [0]  # refer to yolo_utils.py for label list
     vda_model_name: vits
