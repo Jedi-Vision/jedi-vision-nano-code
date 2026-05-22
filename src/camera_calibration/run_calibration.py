@@ -15,6 +15,7 @@ gstreamer_kwargs = {
     "flip_method": 2,
 }
 
+
 def load_capture_folder(capture_folder):
     capture_folder = Path(capture_folder)
     left_paths = sorted((capture_folder / "left").glob("*"))
