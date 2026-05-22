@@ -26,7 +26,6 @@ sys_mgmt = SystemManagement()
 
 DEPTH_CONV = 0.001  # 1mm per 0.001 meter for stereo depth conversion
 
-
 class Driver:
 
     def __init__(
@@ -406,6 +405,27 @@ class Driver:
             objects=objects
         )
 
+    def run_loop(self):
+        frame = self.frame_buffer.get()
+        if frame is None:
+            return
+        self.frame_count += 1
+
+        # Calculate and log FPS every 30 frames
+        if self.frame_count % 30 == 0:
+            elapsed = time.time() - self.start_time
+            fps = 30 / elapsed
+            sys_mgmt.logMetric("driver.fps", fps)
+            sys_mgmt.tokensPerSec = fps  # Update interface property
+            self.start_time = time.time()
+
+        msg = self.model_run(*frame)
+        self.object_buffer.put(msg)
+
+        # Record frame group processed
+        sys_mgmt.recordFrameGroupProcessed(f"frame_{self.frame_count}")
+        return
+
     @log_block("driver_main_loop")
     def run(self):
 
@@ -415,41 +435,26 @@ class Driver:
             self.object_buffer.start()
         self.frame_buffer.start()
 
-        frame_count = 0
-        start_time = time.time()
+        self.frame_count = 0
+        self.start_time = time.time()
 
         while True:
 
             try:
                 while True:
-                    frame = self.frame_buffer.get()
-                    if frame is None:
-                        continue
-                    frame_count += 1
-
-                    # Calculate and log FPS every 30 frames
-                    if frame_count % 30 == 0:
-                        elapsed = time.time() - start_time
-                        fps = 30 / elapsed
-                        sys_mgmt.logMetric("driver.fps", fps)
-                        sys_mgmt.tokensPerSec = fps  # Update interface property
-                        start_time = time.time()
-
-                    msg = self.model_run(*frame)
-                    self.object_buffer.put(msg)
-
-                    # Record frame group processed
-                    sys_mgmt.recordFrameGroupProcessed(f"frame_{frame_count}")
-
+                    self.run_loop()
             except KeyboardInterrupt:
                 print("Interrupted by user (SIGINT). Exiting...")
 
-                # Log shutdown metrics
-                sys_mgmt.logMetric("driver.total_frames_processed", frame_count)
-                sys_mgmt.logMetric("driver.shutdown", True)
-
                 print("Terminating frame buffer...")
                 self.frame_buffer.stop()
+                while not self.frame_buffer.q.empty():  # get all remaining frames
+                    self.run_loop()
+
+                # Log shutdown metrics
+                sys_mgmt.logMetric("driver.total_frames_processed", self.frame_count)
+                sys_mgmt.logMetric("driver.shutdown", True)
+
                 print("Terminating object buffer...")
                 self.object_buffer.stop()
                 exit(0)

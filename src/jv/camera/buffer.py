@@ -212,7 +212,7 @@ class FrameBuffer:
             self.q.put(((frame_left, frame_right), frame_count, timestamp_ms), timeout=0.001)
 
             # Ensure that throughput does not exceed video framerate
-            time.sleep(1 / self.frame_rate)
+            # time.sleep(1 / self.frame_rate)
 
     def _capture_frames(self):
         """Worker for capturing frames from a single camera and storing them in the queue."""
@@ -248,7 +248,7 @@ class FrameBuffer:
             self.q.put(((frame,), frame_count, timestamp_ms), timeout=0.001)
 
             # Ensure that throughput does not exceed video framerate
-            time.sleep(1 / self.frame_rate)
+            # time.sleep(1 / self.frame_rate)
 
     def get(self):
         """
