@@ -1,9 +1,9 @@
 ---
 driver:
   device: mps # cpu, mps, or cuda
-  output_to: socket # socket, file, or none
+  output_to: file # socket, file, or none
   serial_type: struct # struct or protobuf
-  output_file: output.mp4 # writes disparity video with boxes when binocular depth is enabled
+  output_path: vid_output/ # writes disparity image sequence with boxes when binocular depth is enabled
   object_model_name: yolo11
   det_whitelist: [0] # refer to yolo_utils.py for label list
   vda_model_name: vits

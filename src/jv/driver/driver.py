@@ -5,12 +5,14 @@ from jv.scene.depth_estimator import SGBMStereoDepthEstimator, BMStereoDepthEsti
 try:
     from jv.scene.depth_estimator import VPIDepthEstimator
 except ImportError:
+    VPIDepthEstimator = None
     print("VPI is not installed, skipping import...")
 from jv.scene import sample, kalman
 from jv.rectification import Rectifier
 from jv.camera import FrameBuffer
 from jv.representation.data import ObjectRepData, ObjectCoordData, Object2DCoordData
 from typing import Literal
+from pathlib import Path
 import torch
 import cv2
 import time
@@ -32,7 +34,7 @@ class Driver:
         device: Literal["cpu", "mps", "cuda"],
         output_to: Literal["socket", "file", "none"] = "socket",
         serial_type: Literal["struct", "protobuf"] = "struct",
-        output_file: str | None = None,
+        output_path: str | None = None,
         object_model_name: str = "yolo11",
         det_whitelist: set = {0},
         vda_model_name: str = "vits",
@@ -61,8 +63,9 @@ class Driver:
         Args:
             device (Literal["cpu", "mps", "cuda"]): Device to run models on.
             output_to (Literal["socket", "file", "none"]): Output destination for object buffer.
-            output_file (str | None, optional): If set, writes a disparity video with
-                detection boxes when binocular depth is enabled.
+            output_path (str | None, optional): If set, writes a disparity image sequence with
+                detection boxes when binocular depth is enabled. The value is treated as an
+                output directory or file prefix.
             object_model_name (str, optional): Name of the object detection model. Defaults to "yolo11".
             det_whitelist (set, optional): Object detection label whitelist.
             vda_model_name (str, optional): Name of the video depth estimation model. Defaults to "vits".
@@ -127,12 +130,17 @@ class Driver:
         self.binocular = binocular
         self.multi_object = multi_object
         self.use_kalman = use_kalman
-        self.output_file = output_file
-        self.output_writer = None
-        self.output_fps = frame_rate / frame_skip if frame_skip > 0 else frame_rate
-        if self.output_file and not (self.binocular and self.depth):
-            print("Output file is only supported for binocular depth; disabling output.")
-            self.output_file = None
+        self.output_path = output_path
+        self.output_dir: Path | None = None
+        if self.output_path and not (self.binocular and self.depth):
+            print("Output path is only supported for binocular depth; disabling output.")
+            self.output_path = None
+        if self.output_path is not None:
+            output_dir_path = Path(self.output_path)
+            if output_dir_path.suffix:
+                output_dir_path = output_dir_path.with_suffix("")
+            self.output_dir = output_dir_path
+            self.output_dir.mkdir(parents=True, exist_ok=True)
 
         # Binocular depth
         if self.binocular:
@@ -184,6 +192,8 @@ class Driver:
                         ksize=depth_kwargs.get('ksize', 3),
                     )
                 case "vpi":
+                    if VPIDepthEstimator is None:
+                        raise ImportError("VPI is not installed, cannot use VPI depth estimator.")
                     self.depth_estimator = VPIDepthEstimator(
                         num_disparities=depth_kwargs.get('num_disparities', 16*6),
                         block_size=depth_kwargs.get('block_size', 5),
@@ -320,7 +330,12 @@ class Driver:
                 objects = [min(objects, key=lambda obj: (not np.isfinite(obj.depth), obj.depth))]
                 # Should only be one object, set id manually to 1
                 objects[0].id = 1
-                print(f"Object.x: {objects[0].x}, Object.y: {objects[0].y}, Object.depth: {objects[0].depth}, Object.id: {objects[0].id}")
+                print(
+                    "Object.x: ", objects[0].x,
+                    "Object.y: ", objects[0].y,
+                    "Object.depth: ", objects[0].depth,
+                    "Object.id: ", objects[0].id,
+                )
 
             # Log depth statistics
             sys_mgmt.logMetric("depth.min", depth.min().item())  # TODO Review these metrics
@@ -350,7 +365,7 @@ class Driver:
                     cv2.imshow("msg.mask", color_depth)
                     cv2.waitKey(1)
 
-            if self.output_file and self.binocular:
+            if self.output_path and self.binocular:
                 disp_norm = cv2.normalize(disparity, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
                 disp_color = cv2.applyColorMap(disp_norm.astype('uint8'), cv2.COLORMAP_JET)
 
@@ -370,16 +385,9 @@ class Driver:
                         1,
                     )
 
-                if self.output_writer is None:
-                    fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # type: ignore
-                    self.output_writer = cv2.VideoWriter(
-                        self.output_file,
-                        fourcc,
-                        self.output_fps,
-                        (disp_color.shape[1], disp_color.shape[0])
-                    )
-
-                self.output_writer.write(disp_color)
+                if self.output_dir is not None:
+                    frame_path = self.output_dir / f"frame_{frame_number:06d}.png"
+                    cv2.imwrite(str(frame_path), disp_color)
         else:
             # Convert Object2DCoordData to ObjectCoordData with dummy depth if needed
             objects = [
@@ -444,9 +452,6 @@ class Driver:
                 self.frame_buffer.stop()
                 print("Terminating object buffer...")
                 self.object_buffer.stop()
-                if self.output_writer is not None:
-                    self.output_writer.release()
-
                 exit(0)
 
 
