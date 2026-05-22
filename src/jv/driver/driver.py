@@ -351,7 +351,8 @@ class Driver:
                     cv2.waitKey(1)
 
             if self.output_file and self.binocular:
-                disp_color = color_disparity  # type: ignore
+                disp_norm = cv2.normalize(disparity, None, 0, 255, cv2.NORM_MINMAX)  # type: ignore
+                disp_color = cv2.applyColorMap(disp_norm.astype('uint8'), cv2.COLORMAP_JET)
 
                 for obj in objects_2d:
                     x1, y1 = int(obj.x1), int(obj.y1)
