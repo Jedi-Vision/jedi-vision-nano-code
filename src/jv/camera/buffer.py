@@ -148,8 +148,11 @@ class FrameBuffer:
                 self.thread.join()
             if self.capture_left is not None:
                 self.capture_left.release()
-            if self.capture_right is not None:
-                self.capture_right.release()
+            try:
+                if self.capture_right is not None:
+                    self.capture_right.release()
+            except AttributeError:
+                pass
         else:
             if self.thread is not None:
                 self.thread.join()
