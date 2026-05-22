@@ -50,7 +50,7 @@ class ObjectRepData:
                     "label": obj.label,
                     "x": obj.x,
                     "y": obj.y,
-                    "depth": obj.depth
+                    "z": obj.depth
                 }
                 for obj in self.objects
             ],
