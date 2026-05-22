@@ -3,8 +3,8 @@ import argparse
 import cv2
 from pathlib import Path
 
-BOX_SIZE = 50  # mm
-GRID_SIZE = (9, 9)  # width times height, internal corners not true pattern size!
+BOX_SIZE = 25  # mm
+GRID_SIZE = (10, 7)  # width times height, internal corners not true pattern size!
 
 gstreamer_kwargs = {
     "sensor_mode": 4,
