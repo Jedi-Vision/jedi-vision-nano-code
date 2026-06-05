@@ -50,7 +50,7 @@ stereo:
     calibration_data: src/camera_calibration/elp_2026-05-15_11-28-15.yml
     # left_sensor_id: /workspace/jv/left.mp4  # if set to string then can open filepath
     # right_sensor_id: /workspace/jv/right.mp4  # if set to string then can open filepath
-    left_sensor_id: 0
+    left_sensor_id: 1
     right_sensor_id: null
     sample_method: gauss
     wls_filter: true

@@ -172,7 +172,7 @@ ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-12-6/targets/aarch64-linux/
 RUN apt-get install -y libnvvpi3 vpi3-dev vpi3-samples
 RUN apt install python3.10-vpi3
 
-RUN echo 'print test test test test test test test test test test'; git pull; pip install .
+RUN echo 'print test test test test test test test test test test test'; git pull; pip install .
 
 COPY entrypoint.sh /entrypoint.sh
 
